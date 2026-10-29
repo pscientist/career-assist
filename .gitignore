@@ -1,0 +1,10 @@
+.env
+master_cv.json
+venv/
+__pycache__/
+*.py[cod]
+seek_jobs_*.json
+seek_jobs_*.html
+CV_*.html
+!cv_template.html
+.DS_Store
