@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from generate_tailored_cv import generate_cv
-from render_jobs_html import job_seek_id, load_jobs, render_jobs_html
+from render_jobs_html import job_seek_id, load_jobs, mark_job_removed, render_jobs_html
 
 HOST = "127.0.0.1"
 PORT = 8765
@@ -55,12 +55,16 @@ class JobsHandler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_POST(self):
-        if urlparse(self.path).path != "/generate":
-            self._html(404, "<p>Not found.</p>")
-            return
+        path = urlparse(self.path).path
         length = int(self.headers.get("Content-Length", "0"))
         fields = parse_qs(self.rfile.read(length).decode("utf-8"))
         job_id = (fields.get("id") or [""])[0].strip()
+        if path == "/remove":
+            self._remove(job_id)
+            return
+        if path != "/generate":
+            self._html(404, "<p>Not found.</p>")
+            return
         # json_path is the scrape file from startup. A newer scrape needs a restart.
         job = find_job(load_jobs(self.json_path), job_id)
         if job is None:
@@ -73,6 +77,15 @@ class JobsHandler(BaseHTTPRequestHandler):
             return
         # 303 sends the browser to the CV with GET, so a refresh does not generate it again.
         self._redirect("/" + filename)
+
+    def _remove(self, job_id):
+        # The scrape file still holds the ad. The status file is what keeps it hidden.
+        if not job_id or find_job(load_jobs(self.json_path), job_id) is None:
+            self._html(404, "<p>No job with that id.</p>")
+            return
+        mark_job_removed(job_id)
+        render_jobs_html(self.json_path)
+        self._redirect("/" + self.jobs_page)
 
     def _redirect(self, location):
         self.send_response(303)

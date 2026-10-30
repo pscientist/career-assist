@@ -89,21 +89,55 @@ def load_jobs(json_path):
     return json.loads(raw, strict=False)
 
 
+# Removals live beside the scrapes so the next scrape still hides the same Seek id.
+STATUS_PATH = Path(__file__).resolve().parent / "job_status.json"
+
+
+def load_job_status():
+    if not STATUS_PATH.is_file():
+        return {}
+    try:
+        data = json.loads(STATUS_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def removed_job_ids():
+    return {
+        str(job_id)
+        for job_id, entry in load_job_status().items()
+        if isinstance(entry, dict) and entry.get("status") == "removed"
+    }
+
+
+def mark_job_removed(job_id):
+    status = load_job_status()
+    status[str(job_id)] = {"status": "removed"}
+    STATUS_PATH.write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
+
+
 def render_jobs_html(json_path):
     source = Path(json_path)
     jobs = load_jobs(source)
     output = source.with_suffix(".html")
+    hidden = removed_job_ids()
 
     index_items = []
     sections = []
-    for index, job in enumerate(jobs, start=1):
+    visible_index = 0
+    for job in jobs:
+        job_id = job_seek_id(job)
+        if job_id and job_id in hidden:
+            continue
+        visible_index += 1
+        index = visible_index
         anchor = f"job-{index}"
         title = job.get("title") or "Untitled"
         company = job.get("company") or "Unknown company"
         location = job.get("location") or ""
         url = job.get("url") or ""
         tech_stack = job.get("tech_stack") or []
-        job_id = job_seek_id(job)
 
         index_items.append(
             f'<li><a href="#{anchor}">{html.escape(company)} — {html.escape(title)}</a></li>'
@@ -116,11 +150,17 @@ def render_jobs_html(json_path):
             if url
             else ""
         )
-        generate_html = (
-            f'''<form method="post" action="/generate">
+        actions_html = (
+            f'''<div class="actions">
+  <form method="post" action="/generate">
     <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
     <button type="submit">Generate CV</button>
-  </form>'''
+  </form>
+  <form method="post" action="/remove">
+    <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
+    <button type="submit">Remove</button>
+  </form>
+</div>'''
             if job_id
             else ""
         )
@@ -130,7 +170,7 @@ def render_jobs_html(json_path):
   <h2>{html.escape(title)}</h2>
   <p class="meta">{html.escape(company)}{location_html}</p>
   {link_html}
-  {generate_html}
+  {actions_html}
   {stack_html}
   {requirements_html(job.get("requirements") or "", tech_stack)}
 </article>"""
@@ -153,6 +193,8 @@ def render_jobs_html(json_path):
     .stack li {{ border: 1px solid #ccc; border-radius: 4px; padding: 2px 8px; font-size: 13px; }}
     .empty {{ color: #666; font-style: italic; }}
     button {{ font: inherit; padding: 4px 10px; cursor: pointer; }}
+    .actions {{ display: flex; gap: 8px; align-items: center; }}
+    .actions form {{ margin: 0; }}
   </style>
 </head>
 <body>
