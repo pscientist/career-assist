@@ -1,0 +1,19 @@
+---
+description: Commit source changes and restart the jobs server before a new plan
+alwaysApply: true
+---
+
+# Before a new plan
+
+Before starting a new plan or a new feature, check for uncommitted changes. If source files have changes, commit them and push `main`.
+
+Leave these out of the commit:
+
+- `CV_*.html` and `CV_*.pdf`
+- `seek_jobs_*`
+- `job_status.json`
+- `master_cv.json`
+- `.env`
+- `.cursor/` debug logs
+
+Do this before planning or editing the next change.
