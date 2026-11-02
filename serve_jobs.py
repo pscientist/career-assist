@@ -1,5 +1,8 @@
 import html
 import os
+import subprocess
+import sys
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -10,6 +13,8 @@ from render_jobs_html import job_seek_id, load_jobs, mark_job_removed, render_jo
 HOST = "127.0.0.1"
 PORT = 8765
 ROOT = Path(__file__).resolve().parent
+# One scrape at a time. A second click would launch another browser against Seek.
+scrape_lock = threading.Lock()
 
 
 def latest_jobs_json():
@@ -59,13 +64,16 @@ class JobsHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", "0"))
         fields = parse_qs(self.rfile.read(length).decode("utf-8"))
         job_id = (fields.get("id") or [""])[0].strip()
-        if path == "/remove":
+        if path == "/scrape": # Get the latest Jobs
+            self._scrape()
+            return
+        if path == "/remove": # Remove the Job
             self._remove(job_id)
             return
-        if path != "/generate":
+        if path != "/generate": # Generate CV
             self._html(404, "<p>Not found.</p>")
             return
-        # json_path is the scrape file from startup. A newer scrape needs a restart.
+        # json_path is the scrape file currently shown. /scrape replaces it when a run finishes.
         job = find_job(load_jobs(self.json_path), job_id)
         if job is None:
             self._html(404, "<p>No job with that id.</p>")
@@ -77,6 +85,39 @@ class JobsHandler(BaseHTTPRequestHandler):
             return
         # 303 sends the browser to the CV with GET, so a refresh does not generate it again.
         self._redirect("/" + filename)
+
+    def _scrape(self):
+        if not scrape_lock.acquire(blocking=False):
+            self._html(409, "<p>A scrape is already running.</p>")
+            return
+        try:
+            # The server may inherit a sandbox browser cache that has no Chromium.
+            # Playwright's own cache already has the browser.
+            env = os.environ.copy()
+            env.pop("PLAYWRIGHT_BROWSERS_PATH", None)
+            # scrape-seek.py cannot be imported; the hyphen is not a module name.
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "scrape-seek.py")],
+                cwd=ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            if result.stdout:
+                print(result.stdout, end="" if result.stdout.endswith("\n") else "\n")
+            if result.stderr:
+                print(result.stderr, end="" if result.stderr.endswith("\n") else "\n", file=sys.stderr)
+            if result.returncode != 0:
+                detail = (result.stderr or result.stdout or "Scrape failed.").strip()
+                self._html(500, f"<p>Could not scrape Seek.</p><pre>{html.escape(detail)}</pre>")
+                return
+            json_path = latest_jobs_json()
+            html_path = Path(render_jobs_html(json_path))
+            JobsHandler.json_path = json_path
+            JobsHandler.jobs_page = html_path.name
+            self._redirect("/" + html_path.name)
+        finally:
+            scrape_lock.release()
 
     def _remove(self, job_id):
         # The scrape file still holds the ad. The status file is what keeps it hidden.

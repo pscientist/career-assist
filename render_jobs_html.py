@@ -184,6 +184,8 @@ def render_jobs_html(json_path):
   <style>
     body {{ font-family: 'Helvetica Neue', Arial, sans-serif; margin: 40px auto; max-width: 760px; background: #fff; color: #222; line-height: 1.5; }}
     h1 {{ font-size: 26px; margin-bottom: 8px; }}
+    .scrape {{ margin: 0 0 20px; }}
+    .scrape form {{ margin: 0 0 4px; }}
     nav ol {{ padding-left: 20px; }}
     nav a, article a {{ color: #222; }}
     article {{ margin-top: 36px; padding-top: 12px; border-top: 2px solid #333; }}
@@ -199,6 +201,12 @@ def render_jobs_html(json_path):
 </head>
 <body>
   <h1>Scraped jobs</h1>
+  <div class="scrape">
+    <form method="post" action="/scrape">
+      <button type="submit">Scrape Seek</button>
+    </form>
+    <p class="meta">One page of developer jobs in New Zealand. This takes a few minutes.</p>
+  </div>
   <nav>
     <ol>
       {"".join(index_items)}
