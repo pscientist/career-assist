@@ -24,6 +24,24 @@ def _connect():
     )
     connection.execute(
         """
+        CREATE TABLE IF NOT EXISTS jobs (
+            id INTEGER PRIMARY KEY,
+            seek_id TEXT UNIQUE,
+            is_manual INTEGER NOT NULL,
+            source TEXT,
+            title TEXT NOT NULL,
+            company TEXT NOT NULL,
+            location TEXT,
+            url TEXT,
+            tech_stack TEXT,
+            requirements TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
         CREATE TABLE IF NOT EXISTS store_meta (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
