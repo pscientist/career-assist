@@ -182,19 +182,21 @@ def render_jobs_html(json_path):
   <meta charset="UTF-8">
   <title>Scraped jobs</title>
   <style>
-    body {{ font-family: 'Helvetica Neue', Arial, sans-serif; margin: 40px auto; max-width: 760px; background: #fff; color: #222; line-height: 1.5; }}
-    h1 {{ font-size: 26px; margin-bottom: 8px; }}
-    .scrape {{ margin: 0 0 20px; }}
-    .scrape form {{ margin: 0 0 4px; }}
-    nav ol {{ padding-left: 20px; }}
-    nav a, article a {{ color: #222; }}
-    article {{ margin-top: 36px; padding-top: 12px; border-top: 2px solid #333; }}
-    h2 {{ font-size: 20px; margin-bottom: 4px; }}
-    .meta {{ color: #555; margin-top: 0; }}
+    body {{ font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif; margin: 40px auto; max-width: 760px; background: #f4f6f8; color: #1a2332; line-height: 1.5; }}
+    h1 {{ font-size: 26px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 3px solid #1d4e89; }}
+    .scrape {{ margin: 16px 0 24px; }}
+    .scrape form {{ margin: 0 0 6px; }}
+    .scrape button {{ background: #1d4e89; color: #fff; border-color: #1d4e89; }}
+    a {{ color: #1d4e89; text-decoration: none; }}
+    nav ul {{ list-style: none; padding-left: 0; margin: 0; }}
+    nav li {{ margin: 4px 0; }}
+    article {{ margin-top: 20px; padding: 16px 18px; background: #fff; border: 1px solid #d8dee6; border-radius: 8px; }}
+    h2 {{ font-size: 20px; margin: 0 0 4px; }}
+    .meta {{ color: #5c6b7a; margin-top: 0; }}
     .stack {{ display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; }}
-    .stack li {{ border: 1px solid #ccc; border-radius: 4px; padding: 2px 8px; font-size: 13px; }}
-    .empty {{ color: #666; font-style: italic; }}
-    button {{ font: inherit; padding: 4px 10px; cursor: pointer; }}
+    .stack li {{ background: #e7eef6; color: #1d4e89; border-radius: 4px; padding: 2px 8px; font-size: 13px; }}
+    .empty {{ color: #5c6b7a; font-style: italic; }}
+    button {{ font: inherit; padding: 6px 12px; cursor: pointer; background: #fff; color: #1a2332; border: 1px solid #d8dee6; border-radius: 6px; }}
     .actions {{ display: flex; gap: 8px; align-items: center; }}
     .actions form {{ margin: 0; }}
   </style>
@@ -203,14 +205,14 @@ def render_jobs_html(json_path):
   <h1>Scraped jobs</h1>
   <div class="scrape">
     <form method="post" action="/scrape">
-      <button type="submit">Scrape Seek</button>
+      <button type="submit">Get Latest Jobs</button>
     </form>
     <p class="meta">One page of developer jobs in New Zealand. This takes a few minutes.</p>
   </div>
   <nav>
-    <ol>
+    <ul>
       {"".join(index_items)}
-    </ol>
+    </ul>
   </nav>
   {"".join(sections)}
 </body>
