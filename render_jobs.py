@@ -91,17 +91,6 @@ def load_jobs(json_path):
     return json.loads(raw, strict=False)
 
 
-def status_label(record):
-    status = record.get("status")
-    if status == "applied":
-        return '<p class="status">Applied</p>'
-    if status == "interviewing":
-        appointment = record.get("next_appt_date") or ""
-        when = f" · {html.escape(appointment)}" if appointment else ""
-        return f'<p class="status">Interviewing{when}</p>'
-    return ""
-
-
 def render_jobs_html(json_path):
     source = Path(json_path)
     jobs = load_jobs(source)
@@ -136,20 +125,24 @@ def render_jobs_html(json_path):
             if url
             else ""
         )
+        current = record.get("status")
+        if current not in ("applied", "interviewing"):
+            current = "new"
+        options = "".join(
+            f'<option value="{value}"{" selected" if value == current else ""}>{label}</option>'
+            for value, label in (("new", "New"), ("applied", "Applied"), ("interviewing", "Interviewing"))
+        )
         actions_html = (
             f'''<div class="actions">
   <form method="post" action="/generate">
     <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
     <button type="submit">Generate CV</button>
   </form>
-  <form method="post" action="/apply">
+  <form method="post" action="/status">
     <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
-    <button type="submit">Applied</button>
-  </form>
-  <form method="post" action="/interview">
-    <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
-    <input type="date" name="next_appt_date" value="{html.escape(record.get("next_appt_date") or "", quote=True)}">
-    <button type="submit">Interviewing</button>
+    <select name="status" aria-label="Status" onchange="this.form.submit()">
+      {options}
+    </select>
   </form>
   <form method="post" action="/remove">
     <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
@@ -165,7 +158,6 @@ def render_jobs_html(json_path):
   <h2>{html.escape(title)}</h2>
   <p class="meta">{html.escape(company)}{location_html}</p>
   {link_html}
-  {status_label(record)}
   {actions_html}
   {stack_html}
   {requirements_html(job.get("requirements") or "", tech_stack)}
@@ -193,10 +185,9 @@ def render_jobs_html(json_path):
     .stack li {{ background: #e7eef6; color: #1d4e89; border-radius: 4px; padding: 2px 8px; font-size: 13px; }}
     .empty {{ color: #5c6b7a; font-style: italic; }}
     button {{ font: inherit; padding: 6px 12px; cursor: pointer; background: #fff; color: #1a2332; border: 1px solid #d8dee6; border-radius: 6px; }}
-    .status {{ font-weight: 600; color: #1d4e89; margin: 8px 0; }}
     .actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }}
     .actions form {{ display: flex; gap: 8px; align-items: center; margin: 0; }}
-    .actions input[type="date"] {{ font: inherit; color: #1a2332; border: 1px solid #d8dee6; border-radius: 6px; padding: 5px 8px; }}
+    select {{ font: inherit; color: #1a2332; background: #fff; border: 1px solid #d8dee6; border-radius: 6px; padding: 6px 8px; }}
   </style>
 </head>
 <body>

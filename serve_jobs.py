@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from generate_tailored_cv import generate_cv
-from job_store import set_status
+from job_store import clear_status, set_status
 from render_jobs import job_seek_id, load_jobs, render_jobs_html
 
 HOST = "127.0.0.1"
@@ -71,12 +71,14 @@ class JobsHandler(BaseHTTPRequestHandler):
         if path == "/remove": # Remove the Job
             self._save_status(job_id, "deleted")
             return
-        if path == "/apply":
-            self._save_status(job_id, "applied")
-            return
-        if path == "/interview":
-            appointment = (fields.get("next_appt_date") or [""])[0].strip()
-            self._save_status(job_id, "interviewing", appointment)
+        if path == "/status":
+            status = (fields.get("status") or [""])[0].strip()
+            if status == "new":
+                self._clear_status(job_id)
+            elif status in ("applied", "interviewing"):
+                self._save_status(job_id, status)
+            else:
+                self._html(400, "<p>Unknown status.</p>")
             return
         if path != "/generate": # Generate CV
             self._html(404, "<p>Not found.</p>")
@@ -126,6 +128,14 @@ class JobsHandler(BaseHTTPRequestHandler):
             self._redirect("/" + html_path.name)
         finally:
             scrape_lock.release()
+
+    def _clear_status(self, job_id):
+        if not job_id or find_job(load_jobs(self.json_path), job_id) is None:
+            self._html(404, "<p>No job with that id.</p>")
+            return
+        clear_status(job_id)
+        render_jobs_html(self.json_path)
+        self._redirect("/" + self.jobs_page)
 
     def _save_status(self, job_id, status, next_appt_date=None):
         # The scrape file still holds the ad. The database is what keeps the status.

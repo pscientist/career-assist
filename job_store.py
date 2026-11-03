@@ -93,6 +93,12 @@ def set_status(seek_id, status, next_appt_date=None):
         )
 
 
+def clear_status(seek_id):
+    """Drop a status row so the job returns to New."""
+    with _connect() as connection:
+        connection.execute("DELETE FROM job_status WHERE seek_id = ?", (str(seek_id),))
+
+
 def statuses():
     with _connect() as connection:
         rows = connection.execute(
