@@ -4,6 +4,8 @@ import re
 import sys
 from pathlib import Path
 
+from job_store import statuses
+
 
 def repair_wrapped_json(text):
     """Join editor-wrapped lines that landed inside JSON strings."""
@@ -89,46 +91,30 @@ def load_jobs(json_path):
     return json.loads(raw, strict=False)
 
 
-# Removals live beside the scrapes so the next scrape still hides the same Seek id.
-STATUS_PATH = Path(__file__).resolve().parent / "job_status.json"
-
-
-def load_job_status():
-    if not STATUS_PATH.is_file():
-        return {}
-    try:
-        data = json.loads(STATUS_PATH.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return {}
-    return data if isinstance(data, dict) else {}
-
-
-def removed_job_ids():
-    return {
-        str(job_id)
-        for job_id, entry in load_job_status().items()
-        if isinstance(entry, dict) and entry.get("status") == "removed"
-    }
-
-
-def mark_job_removed(job_id):
-    status = load_job_status()
-    status[str(job_id)] = {"status": "removed"}
-    STATUS_PATH.write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
+def status_label(record):
+    status = record.get("status")
+    if status == "applied":
+        return '<p class="status">Applied</p>'
+    if status == "interviewing":
+        appointment = record.get("next_appt_date") or ""
+        when = f" · {html.escape(appointment)}" if appointment else ""
+        return f'<p class="status">Interviewing{when}</p>'
+    return ""
 
 
 def render_jobs_html(json_path):
     source = Path(json_path)
     jobs = load_jobs(source)
     output = source.with_suffix(".html")
-    hidden = removed_job_ids()
+    records = statuses()
 
     index_items = []
     sections = []
     visible_index = 0
     for job in jobs:
         job_id = job_seek_id(job)
-        if job_id and job_id in hidden:
+        record = records.get(job_id) or {}
+        if job_id and record.get("status") == "deleted":
             continue
         visible_index += 1
         index = visible_index
@@ -156,6 +142,15 @@ def render_jobs_html(json_path):
     <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
     <button type="submit">Generate CV</button>
   </form>
+  <form method="post" action="/apply">
+    <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
+    <button type="submit">Applied</button>
+  </form>
+  <form method="post" action="/interview">
+    <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
+    <input type="date" name="next_appt_date" value="{html.escape(record.get("next_appt_date") or "", quote=True)}">
+    <button type="submit">Interviewing</button>
+  </form>
   <form method="post" action="/remove">
     <input type="hidden" name="id" value="{html.escape(job_id, quote=True)}">
     <button type="submit">Remove</button>
@@ -170,6 +165,7 @@ def render_jobs_html(json_path):
   <h2>{html.escape(title)}</h2>
   <p class="meta">{html.escape(company)}{location_html}</p>
   {link_html}
+  {status_label(record)}
   {actions_html}
   {stack_html}
   {requirements_html(job.get("requirements") or "", tech_stack)}
@@ -197,8 +193,10 @@ def render_jobs_html(json_path):
     .stack li {{ background: #e7eef6; color: #1d4e89; border-radius: 4px; padding: 2px 8px; font-size: 13px; }}
     .empty {{ color: #5c6b7a; font-style: italic; }}
     button {{ font: inherit; padding: 6px 12px; cursor: pointer; background: #fff; color: #1a2332; border: 1px solid #d8dee6; border-radius: 6px; }}
-    .actions {{ display: flex; gap: 8px; align-items: center; }}
-    .actions form {{ margin: 0; }}
+    .status {{ font-weight: 600; color: #1d4e89; margin: 8px 0; }}
+    .actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }}
+    .actions form {{ display: flex; gap: 8px; align-items: center; margin: 0; }}
+    .actions input[type="date"] {{ font: inherit; color: #1a2332; border: 1px solid #d8dee6; border-radius: 6px; padding: 5px 8px; }}
   </style>
 </head>
 <body>

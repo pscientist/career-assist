@@ -6,6 +6,7 @@ __pycache__/
 seek_jobs_*.json
 seek_jobs_*.html
 job_status.json
+jobs.sqlite
 CV_*.html
 !cv_template.html
 .DS_Store

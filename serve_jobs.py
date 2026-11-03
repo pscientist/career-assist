@@ -8,7 +8,8 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from generate_tailored_cv import generate_cv
-from render_jobs_html import job_seek_id, load_jobs, mark_job_removed, render_jobs_html
+from job_store import set_status
+from render_jobs import job_seek_id, load_jobs, render_jobs_html
 
 HOST = "127.0.0.1"
 PORT = 8765
@@ -68,7 +69,14 @@ class JobsHandler(BaseHTTPRequestHandler):
             self._scrape()
             return
         if path == "/remove": # Remove the Job
-            self._remove(job_id)
+            self._save_status(job_id, "deleted")
+            return
+        if path == "/apply":
+            self._save_status(job_id, "applied")
+            return
+        if path == "/interview":
+            appointment = (fields.get("next_appt_date") or [""])[0].strip()
+            self._save_status(job_id, "interviewing", appointment)
             return
         if path != "/generate": # Generate CV
             self._html(404, "<p>Not found.</p>")
@@ -119,12 +127,16 @@ class JobsHandler(BaseHTTPRequestHandler):
         finally:
             scrape_lock.release()
 
-    def _remove(self, job_id):
-        # The scrape file still holds the ad. The status file is what keeps it hidden.
+    def _save_status(self, job_id, status, next_appt_date=None):
+        # The scrape file still holds the ad. The database is what keeps the status.
         if not job_id or find_job(load_jobs(self.json_path), job_id) is None:
             self._html(404, "<p>No job with that id.</p>")
             return
-        mark_job_removed(job_id)
+        try:
+            set_status(job_id, status, next_appt_date)
+        except ValueError:
+            self._html(400, "<p>The appointment date must be YYYY-MM-DD.</p>")
+            return
         render_jobs_html(self.json_path)
         self._redirect("/" + self.jobs_page)
 

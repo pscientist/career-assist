@@ -5,7 +5,7 @@ import re
 from datetime import datetime
 from playwright.async_api import async_playwright
 
-from render_jobs_html import render_jobs_html
+from render_jobs import render_jobs_html
 
 # Define the watchlist of technologies you want to monitor (expandable as needed)
 TECH_WATCHLIST = [
