@@ -121,7 +121,7 @@ def render_jobs_html(json_path):
         labels = "".join(f"<li>{html.escape(term)}</li>" for term in tech_stack)
         stack_html = f'<ul class="stack">{labels}</ul>' if labels else ""
         link_html = (
-            f'<p><a href="{html.escape(url, quote=True)}">View on Seek</a></p>'
+            f'<p><a href="{html.escape(url, quote=True)}" target="_blank" rel="noopener noreferrer">View on Seek</a></p>'
             if url
             else ""
         )
