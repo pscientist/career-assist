@@ -88,6 +88,7 @@ async def parseOneJob(card, detail_page, debug=False):
             r"what you['’]?ll bring"
             r"|what you bring"
             r"|skills and qualifications"
+            r"|qualifications and experience"
             r"|skills\s+(?:&|and)\s+experience"
             r"|about you"
             r"|must-haves"
