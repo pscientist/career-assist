@@ -117,8 +117,12 @@ def render_jobs_html(json_path):
         url = job.get("url") or ""
         tech_stack = job.get("tech_stack") or []
 
+        current = record.get("status")
+        if current not in ("applied", "interviewing"):
+            current = "new"
+        status_text = {"new": "New", "applied": "Applied", "interviewing": "Interviewing"}[current]
         index_items.append(
-            f'<li><a href="#{anchor}">{html.escape(company)} — {html.escape(title)}</a></li>'
+            f'<tr><td><a href="#{anchor}">{html.escape(title)}</a></td><td>{status_text}</td></tr>'
         )
 
         labels = "".join(f"<li>{html.escape(term)}</li>" for term in tech_stack)
@@ -128,9 +132,6 @@ def render_jobs_html(json_path):
             if url
             else ""
         )
-        current = record.get("status")
-        if current not in ("applied", "interviewing"):
-            current = "new"
         options = "".join(
             f'<option value="{value}"{" selected" if value == current else ""}>{label}</option>'
             for value, label in (("new", "New"), ("applied", "Applied"), ("interviewing", "Interviewing"))
@@ -171,7 +172,7 @@ def render_jobs_html(json_path):
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Scraped jobs</title>
+  <title>Current Positions</title>
   <style>
     body {{ font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif; margin: 40px auto; max-width: 760px; background: #f4f6f8; color: #1a2332; line-height: 1.5; }}
     h1 {{ font-size: 26px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 3px solid #1d4e89; }}
@@ -181,8 +182,10 @@ def render_jobs_html(json_path):
     .scrape button {{ background: #1d4e89; color: #fff; border-color: #1d4e89; }}
     a.add-job {{ display: inline-block; padding: 6px 12px; background: #fff; color: #1a2332; border: 1px solid #d8dee6; border-radius: 6px; }}
     a {{ color: #1d4e89; text-decoration: none; }}
-    nav ul {{ list-style: none; padding-left: 0; margin: 0; }}
-    nav li {{ margin: 4px 0; }}
+    table.positions {{ width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #d8dee6; }}
+    table.positions th, table.positions td {{ text-align: left; padding: 8px 12px; border-bottom: 1px solid #d8dee6; }}
+    table.positions th {{ color: #5c6b7a; font-weight: 600; }}
+    table.positions tr:last-child td {{ border-bottom: none; }}
     article {{ margin-top: 20px; padding: 16px 18px; background: #fff; border: 1px solid #d8dee6; border-radius: 8px; }}
     h2 {{ font-size: 20px; margin: 0 0 4px; }}
     .meta {{ color: #5c6b7a; margin-top: 0; }}
@@ -196,7 +199,7 @@ def render_jobs_html(json_path):
   </style>
 </head>
 <body>
-  <h1>Scraped jobs</h1>
+  <h1>Current Positions</h1>
   <div class="scrape">
     <div class="scrape-actions">
       <form method="post" action="/scrape">
@@ -206,11 +209,14 @@ def render_jobs_html(json_path):
     </div>
     <p class="meta">One page of developer jobs in New Zealand. This takes a few minutes.</p>
   </div>
-  <nav>
-    <ul>
+  <table class="positions">
+    <thead>
+      <tr><th>Position</th><th>Status</th></tr>
+    </thead>
+    <tbody>
       {"".join(index_items)}
-    </ul>
-  </nav>
+    </tbody>
+  </table>
   {"".join(sections)}
 </body>
 </html>
