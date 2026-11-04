@@ -7,21 +7,36 @@ ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "jobs.sqlite"
 LEGACY_STATUS_PATH = ROOT / "job_status.json"
 STATUSES = {"deleted", "applied", "interviewing"}
+_JOB_STATUS_COLUMNS = """
+    id INTEGER PRIMARY KEY,
+    seek_id TEXT UNIQUE,
+    status TEXT NOT NULL CHECK (status IN ('deleted', 'applied', 'interviewing')),
+    next_appt_date TEXT,
+    updated_at TEXT NOT NULL
+"""
+
+
+def _ensure_job_status(connection):
+    """Give job_status its own id. Copy rows when the old seek_id key is still in place."""
+    columns = connection.execute("PRAGMA table_info(job_status)").fetchall()
+    names = {row["name"] for row in columns}
+    if names and "id" not in names:
+        connection.execute(f"CREATE TABLE job_status_new ({_JOB_STATUS_COLUMNS})")
+        connection.execute(
+            """
+            INSERT INTO job_status_new (seek_id, status, next_appt_date, updated_at)
+            SELECT seek_id, status, next_appt_date, updated_at FROM job_status
+            """
+        )
+        connection.execute("DROP TABLE job_status")
+        connection.execute("ALTER TABLE job_status_new RENAME TO job_status")
+    connection.execute(f"CREATE TABLE IF NOT EXISTS job_status ({_JOB_STATUS_COLUMNS})")
 
 
 def _connect():
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
-    connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS job_status (
-            seek_id TEXT PRIMARY KEY,
-            status TEXT NOT NULL CHECK (status IN ('deleted', 'applied', 'interviewing')),
-            next_appt_date TEXT,
-            updated_at TEXT NOT NULL
-        )
-        """
-    )
+    _ensure_job_status(connection)
     connection.execute(
         """
         CREATE TABLE IF NOT EXISTS jobs (
