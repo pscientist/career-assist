@@ -68,6 +68,15 @@ form.add-job button {
   border-color: #1d4e89;
 }
 
+a.add-job {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #fff;
+  color: #1a2332;
+  border: 1px solid #d8dee6;
+  border-radius: 6px;
+}
+
 .meta,
 .empty {
   color: #5c6b7a;
@@ -124,6 +133,18 @@ table.positions td {
 table.positions th {
   color: #5c6b7a;
   font-weight: 600;
+}
+
+.status-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+button.sort {
+  padding: 0 6px;
+  line-height: 1.4;
 }
 
 table.positions tr:last-child td {

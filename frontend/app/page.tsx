@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
 
@@ -9,6 +9,8 @@ const STATUS_OPTIONS = [
   ["applied", "Applied"],
   ["interviewing", "Interviewing"],
 ] as const;
+
+const STATUS_RANK: Record<string, number> = { new: 0, applied: 1, interviewing: 2 };
 
 type Job = {
   id: number;
@@ -20,16 +22,6 @@ type Job = {
   tech_stack: string[];
   requirements: string;
   status: string;
-};
-
-const emptyForm = {
-  title: "",
-  company: "",
-  location: "",
-  url: "",
-  seek_id: "",
-  tech_stack: "",
-  requirements: "",
 };
 
 function escapeRegExp(value: string) {
@@ -81,12 +73,18 @@ async function errorMessage(response: Response) {
 
 export default function Page() {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState("");
   const [scraping, setScraping] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [cvJobId, setCvJobId] = useState<number | null>(null);
   const [cvLinks, setCvLinks] = useState<Record<number, string>>({});
+  const [statusOrder, setStatusOrder] = useState<"asc" | "desc" | null>(null);
+
+  const listed = statusOrder
+    ? [...jobs].sort((a, b) => {
+        const diff = (STATUS_RANK[a.status] ?? 0) - (STATUS_RANK[b.status] ?? 0);
+        return statusOrder === "asc" ? diff : -diff;
+      })
+    : jobs;
 
   async function loadJobs() {
     const response = await fetch(`${API}/jobs`);
@@ -116,29 +114,6 @@ export default function Page() {
       setMessage("Could not scrape Seek.");
     } finally {
       setScraping(false);
-    }
-  }
-
-  async function addJob(event: FormEvent) {
-    event.preventDefault();
-    setSaving(true);
-    setMessage("");
-    try {
-      const response = await fetch(`${API}/jobs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!response.ok) {
-        setMessage(await errorMessage(response));
-        return;
-      }
-      setForm(emptyForm);
-      await loadJobs();
-    } catch {
-      setMessage("Could not add the job.");
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -185,73 +160,53 @@ export default function Page() {
           <button type="button" onClick={scrape} disabled={scraping}>
             {scraping ? "Getting jobs..." : "Get Latest Jobs"}
           </button>
+          <a className="add-job" href="/add-job">
+            Add a Job
+          </a>
         </div>
         <p className="meta">One page of developer jobs in New Zealand. This takes a few minutes.</p>
       </div>
       {message && <p className="message">{message}</p>}
 
-      <form className="add-job" onSubmit={addJob}>
-        <h2>Add a Job</h2>
-        {(
-          [
-            ["title", "Title", true],
-            ["company", "Company", true],
-            ["location", "Location", false],
-            ["url", "URL", false],
-            ["seek_id", "Seek id", false],
-            ["tech_stack", "Tech stack", false],
-          ] as const
-        ).map(([name, label, required]) => (
-          <label key={name}>
-            <span>{label}</span>
-            <input
-              name={name}
-              value={form[name]}
-              required={required}
-              placeholder={name === "tech_stack" ? "react, python, aws" : undefined}
-              onChange={(event) => setForm({ ...form, [name]: event.target.value })}
-            />
-          </label>
-        ))}
-        <label>
-          <span>Requirements</span>
-          <textarea
-            name="requirements"
-            value={form.requirements}
-            onChange={(event) => setForm({ ...form, requirements: event.target.value })}
-          />
-        </label>
-        <button type="submit" disabled={saving}>
-          Add job
-        </button>
-        <p className="meta">Title and company are required. Leave Seek id blank when the job has no Seek number.</p>
-      </form>
-
       <table className="positions">
         <thead>
           <tr>
             <th>Position</th>
-            <th>Status</th>
+            <th>Company</th>
+            <th>
+              <span className="status-heading">
+                Status
+                <button
+                  type="button"
+                  className="sort"
+                  aria-label="Sort by status"
+                  onClick={() => setStatusOrder((current) => (current === "asc" ? "desc" : "asc"))}
+                >
+                  {statusOrder === "desc" ? "↓" : "↑"}
+                </button>
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
-          {jobs.length === 0 && (
+          {listed.length === 0 && (
             <tr>
-              <td colSpan={2}>No jobs yet.</td>
+              <td colSpan={3}>No jobs yet.</td>
             </tr>
           )}
-          {jobs.map((job) => (
+          {listed.map((job) => (
             <tr key={job.id}>
               <td>
                 <a href={`#job-${job.id}`}>{job.title}</a>
               </td>
+              <td>{job.company}</td>
               <td>{STATUS_OPTIONS.find(([value]) => value === job.status)?.[1] || "New"}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {jobs.map((job) => (
+      {listed.map((job) => (
         <article key={job.id} id={`job-${job.id}`}>
           <h2>{job.title}</h2>
           <p className="meta">
