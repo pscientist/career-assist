@@ -4,7 +4,7 @@ import re
 import sys
 from pathlib import Path
 
-from job_store import statuses
+from job_store import manual_jobs, statuses
 
 
 def repair_wrapped_json(text):
@@ -94,6 +94,9 @@ def load_jobs(json_path):
 def render_jobs_html(json_path):
     source = Path(json_path)
     jobs = load_jobs(source)
+    scrape_ids = {job_seek_id(job) for job in jobs}
+    added = [job for job in manual_jobs() if job_seek_id(job) not in scrape_ids]
+    jobs = added + jobs
     output = source.with_suffix(".html")
     records = statuses()
 
@@ -173,8 +176,10 @@ def render_jobs_html(json_path):
     body {{ font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif; margin: 40px auto; max-width: 760px; background: #f4f6f8; color: #1a2332; line-height: 1.5; }}
     h1 {{ font-size: 26px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 3px solid #1d4e89; }}
     .scrape {{ margin: 16px 0 24px; }}
-    .scrape form {{ margin: 0 0 6px; }}
+    .scrape-actions {{ display: flex; gap: 8px; align-items: center; margin: 0 0 6px; }}
+    .scrape form {{ margin: 0; }}
     .scrape button {{ background: #1d4e89; color: #fff; border-color: #1d4e89; }}
+    a.add-job {{ display: inline-block; padding: 6px 12px; background: #fff; color: #1a2332; border: 1px solid #d8dee6; border-radius: 6px; }}
     a {{ color: #1d4e89; text-decoration: none; }}
     nav ul {{ list-style: none; padding-left: 0; margin: 0; }}
     nav li {{ margin: 4px 0; }}
@@ -193,9 +198,12 @@ def render_jobs_html(json_path):
 <body>
   <h1>Scraped jobs</h1>
   <div class="scrape">
-    <form method="post" action="/scrape">
-      <button type="submit">Get Latest Jobs</button>
-    </form>
+    <div class="scrape-actions">
+      <form method="post" action="/scrape">
+        <button type="submit">Get Latest Jobs</button>
+      </form>
+      <a class="add-job" href="/add-job">Add a Job</a>
+    </div>
     <p class="meta">One page of developer jobs in New Zealand. This takes a few minutes.</p>
   </div>
   <nav>
