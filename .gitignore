@@ -10,3 +10,5 @@ jobs.sqlite
 CV_*.html
 !cv_template.html
 .DS_Store
+node_modules/
+.next/
