@@ -19,6 +19,12 @@ h2 {
   margin: 0 0 4px;
 }
 
+.quote {
+  margin: 0 0 16px;
+  color: #5c6b7a;
+  font-style: italic;
+}
+
 a {
   color: #1d4e89;
   text-decoration: none;
@@ -118,21 +124,41 @@ form.add-job textarea {
 
 table.positions {
   width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border: 1px solid #d8dee6;
+  border-collapse: separate;
+  border-spacing: 0 16px;
+  background: transparent;
 }
 
 table.positions th,
 table.positions td {
   text-align: left;
+  vertical-align: top;
   padding: 8px 12px;
+}
+
+table.positions td {
+  background: #fff;
+  border-top: 1px solid #d8dee6;
   border-bottom: 1px solid #d8dee6;
+}
+
+table.positions td:first-child {
+  border-left: 1px solid #d8dee6;
+  border-radius: 8px 0 0 8px;
+}
+
+table.positions td:last-child {
+  border-right: 1px solid #d8dee6;
+  border-radius: 0 8px 8px 0;
 }
 
 table.positions th {
   color: #5c6b7a;
   font-weight: 600;
+}
+
+td.added {
+  white-space: nowrap;
 }
 
 .status-heading {
@@ -147,14 +173,12 @@ button.sort {
   line-height: 1.4;
 }
 
-table.positions tr:last-child td {
-  border-bottom: none;
-}
 
 .stack {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin: 6px 0 0;
   padding: 0;
   list-style: none;
 }

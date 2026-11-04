@@ -12,6 +12,23 @@ const STATUS_OPTIONS = [
 
 const STATUS_RANK: Record<string, number> = { new: 0, applied: 1, interviewing: 2 };
 
+const QUOTES = [
+  ["The only way to do great work is to love what you do.", "Steve Jobs"],
+  ["It always seems impossible until it is done.", "Nelson Mandela"],
+  ["Start where you are. Use what you have. Do what you can.", "Arthur Ashe"],
+  ["Well done is better than well said.", "Benjamin Franklin"],
+  ["Do the best you can until you know better. Then when you know better, do better.", "Maya Angelou"],
+  ["What you do makes a difference, and you have to decide what kind of difference you want to make.", "Jane Goodall"],
+  ["Nothing will work unless you do.", "Maya Angelou"],
+] as const;
+
+function quoteOfTheDay() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const day = Math.floor((now.getTime() - start.getTime()) / 86400000);
+  return QUOTES[day % QUOTES.length];
+}
+
 type Job = {
   id: number;
   seek_id: string;
@@ -22,7 +39,19 @@ type Job = {
   tech_stack: string[];
   requirements: string;
   status: string;
+  created_at: string;
 };
+
+function createdDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const period = date.getHours() >= 12 ? "pm" : "am";
+  const hours = String(date.getHours() % 12 || 12).padStart(2, "0");
+  return `${day}/${month} ${hours}:${minutes} ${period}`;
+}
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -152,9 +181,14 @@ export default function Page() {
     }
   }
 
+  const [quote, author] = quoteOfTheDay();
+
   return (
     <main>
-      <h1>Current Positions</h1>
+      <h1>Your Dashboard</h1>
+      <p className="quote">
+        “{quote}” — {author}
+      </p>
       <div className="scrape">
         <div className="scrape-actions">
           <button type="button" onClick={scrape} disabled={scraping}>
@@ -173,6 +207,7 @@ export default function Page() {
           <tr>
             <th>Position</th>
             <th>Company</th>
+            <th>Added</th>
             <th>
               <span className="status-heading">
                 Status
@@ -191,15 +226,23 @@ export default function Page() {
         <tbody>
           {listed.length === 0 && (
             <tr>
-              <td colSpan={3}>No jobs yet.</td>
+              <td colSpan={4}>No jobs yet.</td>
             </tr>
           )}
           {listed.map((job) => (
             <tr key={job.id}>
               <td>
                 <a href={`#job-${job.id}`}>{job.title}</a>
+                {job.tech_stack.length > 0 && (
+                  <ul className="stack">
+                    {job.tech_stack.map((term) => (
+                      <li key={term}>{term}</li>
+                    ))}
+                  </ul>
+                )}
               </td>
               <td>{job.company}</td>
+              <td className="added">{createdDate(job.created_at)}</td>
               <td>{STATUS_OPTIONS.find(([value]) => value === job.status)?.[1] || "New"}</td>
             </tr>
           ))}

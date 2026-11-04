@@ -1,6 +1,6 @@
 import "./globals.css";
 
-export const metadata = { title: "Current Positions" };
+export const metadata = { title: "Your Dashboard" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

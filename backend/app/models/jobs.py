@@ -33,6 +33,7 @@ def _job(row):
         "tech_stack": [str(term) for term in stack],
         "requirements": row["requirements"] or "",
         "status": row["status"],
+        "created_at": row["created_at"] or "",
     }
 
 
