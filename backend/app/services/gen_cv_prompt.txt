@@ -1,5 +1,5 @@
 You are an expert technical CV writer.
-Tailor the candidate's master CV for the following job description.
+Write a matching summary for the candidate against the following job description.
 
 JOB TARGET:
 Company: {company}
@@ -12,23 +12,13 @@ CANDIDATE MASTER CV:
 {master_cv}
 
 INSTRUCTIONS:
-Return a strictly valid JSON object with the following keys:
+Return a strictly valid JSON object with one key:
 
-1. "tailored_summary": An array of 4 objects, ordered by what the job description emphasizes most.
-   Each object is {"theme": "...", "match": "..."}.
-   "theme" is a short label for one requirement (for example "Full-Stack Development").
-   "match" is one sentence of evidence from the master CV only: real employers, products, and tools.
-   Do not claim a technology, framework, or employer that is not in the master CV.
-   Plz write in the first person.
-
-2. "experiences": An array of experiences, each matching the structure:
-   {"company": "...", "role": "...", "period": "...", "selected_bullets": ["bullet 1", "bullet 2"]}
-   Make sure bullet points highlight real achievements
-   and direct relevance (e.g., end-to-end products, dashboards, mobile apps).
-   Always include the first five roles, in this order, so the timeline stays continuous:
-   Radiant Leaf Ltd, Descisys, Fishpond Ltd, GrabOne Ltd, and Faculty of Engineering, University of Auckland.
-   Also always include Tait Electronics, because a recommendation refers to it.
-   Keep each company, role, and period exactly as in the master CV, and choose bullets from that CV only.
-   E2 Digital Web Services may be omitted.
+"tailored_summary": An array of 4 objects, ordered by what the job description emphasizes most.
+Each object is {"theme": "...", "match": "..."}.
+"theme" is a short label for one requirement (for example "Full-Stack Development").
+"match" is one sentence of evidence from the master CV only: real employers, products, and tools.
+Do not claim a technology, framework, or employer that is not in the master CV.
+Plz write in the first person.
 
 Respond ONLY with raw JSON, no markdown code blocks.

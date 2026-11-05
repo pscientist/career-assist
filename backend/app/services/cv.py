@@ -166,6 +166,19 @@ def save_current_highlights(highlights):
     return master_cv_for_editor()
 
 
+def experiences_from_master(master_cv):
+    """Copy every role as written. The model only writes the matching summary."""
+    return [
+        {
+            "company": experience.get("company", ""),
+            "role": experience.get("role", ""),
+            "period": experience.get("period", ""),
+            "selected_bullets": list(experience.get("highlights") or []),
+        }
+        for experience in master_cv.get("experiences") or []
+    ]
+
+
 def generate_cv(job_id):
     job = get_job(job_id)
     if job is None:
@@ -173,6 +186,7 @@ def generate_cv(job_id):
     master_cv = load_master_cv()
     print(f"Tailoring CV for {job['title']} at {job['company']}...")
     tailored = tailor_cv_content(job, master_cv)
+    tailored["experiences"] = experiences_from_master(master_cv)
     return render_html_cv(
         tailored,
         master_cv,

@@ -72,4 +72,4 @@ python3 -m venv venv
 cd frontend && npm install
 ```
 
-Put `OPENAI_API_KEY` in `.env` at the repository root. Put the master CV in `master_cv.json` beside it. Generating a CV reads that file, asks the model for a tailored summary and experience bullets, and writes `CV_{company}_{id}.html`.
+Put `OPENAI_API_KEY` in `.env` at the repository root. Put the master CV in `master_cv.json` beside it. Generating a CV reads that file, asks the model for a matching summary, copies each role's highlights from the master CV, and writes `CV_{company}_{id}.html`.
