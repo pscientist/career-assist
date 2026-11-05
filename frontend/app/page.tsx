@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { techLabel } from "./tech";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
 
@@ -245,7 +246,7 @@ export default function Page() {
                 {job.tech_stack.length > 0 && (
                   <ul className="stack">
                     {job.tech_stack.map((term) => (
-                      <li key={term}>{term}</li>
+                      <li key={term}>{techLabel(term)}</li>
                     ))}
                   </ul>
                 )}
@@ -304,7 +305,7 @@ export default function Page() {
           {job.tech_stack.length > 0 && (
             <ul className="stack">
               {job.tech_stack.map((term) => (
-                <li key={term}>{term}</li>
+                <li key={term}>{techLabel(term)}</li>
               ))}
             </ul>
           )}

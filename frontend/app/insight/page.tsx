@@ -1,12 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { techLabel } from "../tech";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
 
 type Job = {
   tech_stack: string[];
+  created_at: string;
 };
+
+function dayMonthYear(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}/${month}/${date.getFullYear()}`;
+}
+
+function summaryLine(jobs: Job[]) {
+  const dates = jobs.map((job) => dayMonthYear(job.created_at)).filter(Boolean);
+  if (!jobs.length || dates.length !== jobs.length) return "";
+  const ordered = [...dates].sort((a, b) => {
+    const [ad, am, ay] = a.split("/").map(Number);
+    const [bd, bm, by] = b.split("/").map(Number);
+    return new Date(ay, am - 1, ad).getTime() - new Date(by, bm - 1, bd).getTime();
+  });
+  return `From ${jobs.length} jobs between ${ordered[0]} - ${ordered[ordered.length - 1]}`;
+}
 
 type ShareRow = {
   tech: string;
@@ -29,11 +50,12 @@ function techShare(jobs: Job[]): ShareRow[] {
       jobs: count,
       share: total === 0 ? 0 : Math.round((count / total) * 100),
     }))
-    .sort((a, b) => b.jobs - a.jobs || a.tech.localeCompare(b.tech));
+    .sort((a, b) => b.jobs - a.jobs || techLabel(a.tech).localeCompare(techLabel(b.tech)));
 }
 
 export default function InsightPage() {
   const [rows, setRows] = useState<ShareRow[]>([]);
+  const [summary, setSummary] = useState("");
   const [empty, setEmpty] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -48,6 +70,7 @@ export default function InsightPage() {
       const jobs: Job[] = await response.json();
       if (cancelled) return;
       setEmpty(jobs.length === 0);
+      setSummary(summaryLine(jobs));
       setRows(techShare(jobs));
     })();
     return () => {
@@ -59,6 +82,7 @@ export default function InsightPage() {
     <main>
       <header className="hero">
         <h1>Job Market Insight</h1>
+        {summary && <p className="lede">{summary}</p>}
       </header>
       {message && <p className="message">{message}</p>}
       {rows.length > 0 && (
@@ -66,7 +90,7 @@ export default function InsightPage() {
           <ul className="bars">
             {rows.map((row) => (
               <li key={row.tech}>
-                <span className="bar-label">{row.tech}</span>
+                <span className="bar-label">{techLabel(row.tech)}</span>
                 <span className="bar-track">
                   <span className="bar-fill" style={{ width: `${row.share}%` }} />
                 </span>
@@ -93,7 +117,7 @@ export default function InsightPage() {
             )}
             {rows.map((row) => (
               <tr key={row.tech}>
-                <td>{row.tech}</td>
+                <td>{techLabel(row.tech)}</td>
                 <td>{row.jobs}</td>
                 <td>{row.share}%</td>
               </tr>
