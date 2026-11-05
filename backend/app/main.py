@@ -53,8 +53,8 @@ def _stack(value):
 
 
 @app.get("/jobs")
-def jobs():
-    return list_jobs()
+def jobs(include_deleted: bool = False):
+    return list_jobs(include_deleted)
 
 
 @app.post("/jobs")

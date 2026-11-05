@@ -7,6 +7,7 @@ const USERNAME = "Cathy";
 
 const MENU = [
   { label: "Dashboard", href: "/", icon: "home" },
+  { label: "Job Market Insight", href: "/insight", icon: "chart" },
   { label: "Discover Jobs", href: "#", icon: "search" },
   { label: "My Applications", href: "#", icon: "layers" },
   { label: "AI CV Toolkit", href: "#", icon: "spark" },
@@ -27,6 +28,13 @@ function Icon({ name }: { name: string }) {
     return (
       <svg {...common}>
         <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" />
+      </svg>
+    );
+  }
+  if (name === "chart") {
+    return (
+      <svg {...common}>
+        <path d="M4 19V10M10 19V5M16 19v-7M2 19h20" />
       </svg>
     );
   }
@@ -89,7 +97,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
         <nav className="menu">
           {MENU.map((item) => {
-            const active = item.href === "/" && pathname === "/";
+            const active = item.href !== "#" && pathname === item.href;
             return (
               <a key={item.label} className={active ? "menu-link active" : "menu-link"} href={item.href}>
                 <Icon name={item.icon} />

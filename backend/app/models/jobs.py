@@ -37,16 +37,13 @@ def _job(row):
     }
 
 
-def list_jobs():
-    """Jobs still on the list, newest first."""
+def list_jobs(include_deleted=False):
+    """Jobs still on the list, newest first. Pass include_deleted for market counts."""
+    sql = "SELECT * FROM jobs ORDER BY id DESC"
+    if not include_deleted:
+        sql = "SELECT * FROM jobs WHERE status != 'deleted' ORDER BY id DESC"
     with connect() as connection:
-        rows = connection.execute(
-            """
-            SELECT * FROM jobs
-            WHERE status != 'deleted'
-            ORDER BY id DESC
-            """
-        ).fetchall()
+        rows = connection.execute(sql).fetchall()
     return [_job(row) for row in rows]
 
 
