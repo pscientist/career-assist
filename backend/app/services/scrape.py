@@ -9,7 +9,8 @@ TECH_WATCHLIST = [
     "python", "javascript", "typescript", "react", "next.js",
     "node.js", "php", "postgresql", "aws", "docker", "fastapi",
     "django", "flask", "vue", "angular", "azure", "openai", "anthropic",
-    "java", "wordpress", "claude code", "ai", "cursor",
+    "java", "wordpress", "claude code", "ai", "cursor",".net","c#","restful api",
+    "codex",
 ]
 
 
@@ -72,6 +73,7 @@ async def parse_one_job(card, detail_page):
             r"|skills\s+(?:&|and)\s+experience"
             r"|about you"
             r"|must-haves"
+            r"|Ideally you will have"
             r")\s*:?[ \t]*"
         )
         section_match = requirements_heading.search(full_description)
