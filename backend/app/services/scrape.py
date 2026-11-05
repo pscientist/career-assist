@@ -77,7 +77,10 @@ async def parse_one_job(card, detail_page):
             r")\s*:?[ \t]*"
         )
         section_match = requirements_heading.search(full_description)
-        requirements = full_description[section_match.end():].strip() if section_match else ""
+        if section_match:
+            requirements = full_description[section_match.end():].strip()
+        else:
+            requirements = full_description.strip()
 
         job_id = await card.get_attribute("data-job-id")
         if not job_id and raw_href:
