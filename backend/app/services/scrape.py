@@ -9,6 +9,7 @@ TECH_WATCHLIST = [
     "python", "javascript", "typescript", "react", "next.js",
     "node.js", "php", "postgresql", "aws", "docker", "fastapi",
     "django", "flask", "vue", "angular", "azure", "openai", "anthropic",
+    "java",
 ]
 
 

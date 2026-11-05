@@ -36,6 +36,8 @@ def tailor_cv_content(job_data, master_cv):
     load_dotenv(ROOT / ".env")
     client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
     prompt = build_cv_prompt(job_data, master_cv)
+
+    # call GPT with the prompt
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
