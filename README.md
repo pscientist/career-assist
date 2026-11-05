@@ -2,7 +2,13 @@
 
 A personal app for tracking developer jobs on Seek and generating a tailored CV for one of them. The page lists the current positions. A scrape refreshes the listing. Each job can be marked New, Applied, or Interviewing, removed, or have ChatGPT generates the CV in HTML, from a "master CV" to tailor to the position.
 
-The browser talks only to the API. Playwright and the OpenAI call stay behind that API, and only the API writes to the database.
+Job Market Insight reads the stored ads and asks the model which AI tools employers name, and what they expect someone to do with them.
+
+The browser talks only to the API. Playwright and the OpenAI calls stay behind that API, and only the API writes to the database.
+
+## Tech stack
+
+Python, React, JavaScript/TypeScript, OpenAI, SQL, Cursor
 
 ![CareerAssist dashboard](docs/dashboard.jpg)
 
@@ -12,10 +18,12 @@ flowchart TD
   api[FastAPI]
   scrape[Playwright scrape]
   cv[OpenAI CV]
+  insight[OpenAI analysis]
   db[SQLite]
   page --> api
   api --> scrape
   api --> cv
+  api --> insight
   api --> db
 ```
 
@@ -28,8 +36,14 @@ flowchart TD
 | SQLite | `backend/app/models/jobs.py` |
 | Seek scrape | `backend/app/services/scrape.py` |
 | CV generation | `backend/app/services/cv.py` |
+| Insight page | `frontend/app/insight/page.tsx` |
+| AI analysis | `backend/app/services/insight.py` |
 
 Scraped jobs and hand-added jobs live in one SQLite table. A later scrape updates the ad text and leaves the status as it is, so Applied and Removed stay put.
+
+Analyse on Job Market Insight 
+==============================
+The app scans those stored ads, including removed ones, for Claude Code, Cursor, Codex, Copilot, ChatGPT, OpenAI, and Anthropic. It sends the matching titles, companies, and a short requirements excerpt to the model, which returns one plain-text paragraph. The call uses the same `OPENAI_API_KEY`. If none of the ads name those tools, the page says so and does not call the model.
 
 ## Run
 

@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from app.models.db import ROOT, init_db
 from app.models.jobs import add_job, get_job, list_jobs, set_status, upsert_scraped
 from app.services.cv import generate_cv
+from app.services.insight import analyse_ai_skills
 from app.services.scrape import scrape_seek_nz
 
 # From backend/: ../venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8765
@@ -95,6 +96,14 @@ async def scrape():
         except Exception as error:
             raise HTTPException(500, f"Could not scrape Seek. {error}") from error
     return list_jobs()
+
+
+@app.post("/insights/ai")
+def ai_insight():
+    try:
+        return {"analysis": analyse_ai_skills()}
+    except Exception as error:
+        raise HTTPException(500, f"Could not analyse AI skills. {error}") from error
 
 
 @app.post("/jobs/{job_id}/cv")

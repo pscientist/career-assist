@@ -58,6 +58,8 @@ export default function InsightPage() {
   const [summary, setSummary] = useState("");
   const [empty, setEmpty] = useState(false);
   const [message, setMessage] = useState("");
+  const [analysis, setAnalysis] = useState("");
+  const [analysing, setAnalysing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +80,24 @@ export default function InsightPage() {
     };
   }, []);
 
+  async function analyse() {
+    setAnalysing(true);
+    setMessage("");
+    try {
+      const response = await fetch(`${API}/insights/ai`, { method: "POST" });
+      if (!response.ok) {
+        setMessage("Could not analyse AI skills.");
+        return;
+      }
+      const body = await response.json();
+      setAnalysis(typeof body.analysis === "string" ? body.analysis : "");
+    } catch {
+      setMessage("Could not analyse AI skills.");
+    } finally {
+      setAnalysing(false);
+    }
+  }
+
   return (
     <main>
       <header className="hero">
@@ -85,6 +105,13 @@ export default function InsightPage() {
         {summary && <p className="lede">{summary}</p>}
       </header>
       {message && <p className="message">{message}</p>}
+      <div className="jobs-card analysis">
+        <h2>Summary on AI in the industry</h2>
+        <button type="button" className="primary" onClick={analyse} disabled={analysing}>
+          {analysing ? "Analysing..." : "Get Insight"}
+        </button>
+        {analysis && <p>{analysis}</p>}
+      </div>
       {rows.length > 0 && (
         <div className="jobs-card">
           <ul className="bars">
