@@ -291,6 +291,47 @@ form.add-job textarea {
   box-sizing: border-box;
 }
 
+.bars {
+  list-style: none;
+  margin: 8px 4px;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.bars li {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr 3rem;
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.bar-label {
+  font-size: 14px;
+}
+
+.bar-track {
+  height: 10px;
+  background: #efeaf8;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  background: #5b3cc4;
+  border-radius: 999px;
+}
+
+.bar-value {
+  text-align: right;
+  color: #5c6b7a;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
 table.share {
   width: 100%;
   border-collapse: collapse;

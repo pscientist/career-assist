@@ -61,6 +61,21 @@ export default function InsightPage() {
         <h1>Job Market Insight</h1>
       </header>
       {message && <p className="message">{message}</p>}
+      {rows.length > 0 && (
+        <div className="jobs-card">
+          <ul className="bars">
+            {rows.map((row) => (
+              <li key={row.tech}>
+                <span className="bar-label">{row.tech}</span>
+                <span className="bar-track">
+                  <span className="bar-fill" style={{ width: `${row.share}%` }} />
+                </span>
+                <span className="bar-value">{row.share}%</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="jobs-card">
         <table className="share">
           <thead>
