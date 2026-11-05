@@ -1,8 +1,10 @@
-# Job scraper
+# CareerAssist
 
 A personal app for tracking developer jobs on Seek and generating a tailored CV for one of them. The page lists the current positions. A scrape refreshes the listing. Each job can be marked New, Applied, or Interviewing, removed, or have ChatGPT generates the CV in HTML, from a "master CV" to tailor to the position.
 
 The browser talks only to the API. Playwright and the OpenAI call stay behind that API, and only the API writes to the database.
+
+![CareerAssist dashboard](docs/dashboard.jpg)
 
 ```mermaid
 flowchart TD
