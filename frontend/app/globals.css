@@ -305,6 +305,73 @@ form.add-job textarea {
   box-sizing: border-box;
 }
 
+form.master-cv .highlight-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+form.master-cv .highlight-row label {
+  flex: 1;
+}
+
+form.master-cv textarea.highlight {
+  min-height: 72px;
+}
+
+form.master-cv button.quiet {
+  background: #fff;
+  color: #1a2332;
+  border-color: #d8dee6;
+}
+
+form.master-cv .highlight-row button.quiet {
+  margin-bottom: 12px;
+}
+
+.contact-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.contact-list li {
+  display: flex;
+  gap: 12px;
+  margin: 2px 0;
+}
+
+.contact-list span {
+  width: 5.5rem;
+  color: #5c6b7a;
+}
+
+.cv-rest {
+  margin-top: 20px;
+  padding: 16px 18px 8px;
+}
+
+.cv-rest section {
+  margin-bottom: 18px;
+}
+
+.cv-rest h3 {
+  margin: 12px 0 4px;
+  font-size: 16px;
+}
+
+.cv-rest h3 span {
+  display: block;
+  color: #5c6b7a;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cv-rest ul {
+  margin: 4px 0 0;
+  padding-left: 1.2rem;
+}
+
 .bars {
   list-style: none;
   margin: 8px 4px;

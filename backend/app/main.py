@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from app.models.db import ROOT, init_db
 from app.models.jobs import add_job, get_job, list_jobs, set_status, upsert_scraped
-from app.services.cv import generate_cv
+from app.services.cv import generate_cv, master_cv_for_editor, save_current_highlights
 from app.services.insight import analyse_ai_skills
 from app.services.scrape import scrape_seek_nz
 
@@ -47,6 +47,10 @@ class JobIn(BaseModel):
 
 class StatusIn(BaseModel):
     status: str
+
+
+class HighlightsIn(BaseModel):
+    highlights: list[str]
 
 
 def _stack(value):
@@ -104,6 +108,26 @@ def ai_insight():
         return {"analysis": analyse_ai_skills()}
     except Exception as error:
         raise HTTPException(500, f"Could not analyse AI skills. {error}") from error
+
+
+@app.get("/master-cv")
+def read_master_cv():
+    try:
+        return master_cv_for_editor()
+    except Exception as error:
+        raise HTTPException(500, f"Could not read the master CV. {error}") from error
+
+
+@app.put("/master-cv/current-highlights")
+def update_current_highlights(body: HighlightsIn):
+    try:
+        return save_current_highlights(body.highlights)
+    except LookupError as error:
+        raise HTTPException(404, str(error)) from error
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from error
+    except Exception as error:
+        raise HTTPException(500, f"Could not save the master CV. {error}") from error
 
 
 @app.post("/jobs/{job_id}/cv")

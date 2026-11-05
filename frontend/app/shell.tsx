@@ -8,6 +8,7 @@ const USERNAME = "Cathy";
 const MENU = [
   { label: "Dashboard", href: "/", icon: "home" },
   { label: "Job Market Insight", href: "/insight", icon: "chart" },
+  { label: "Master CV", href: "/cv", icon: "file" },
   { label: "Discover Jobs", href: "#", icon: "search" },
   { label: "My Applications", href: "#", icon: "layers" },
   { label: "AI CV Toolkit", href: "#", icon: "spark" },
@@ -59,6 +60,14 @@ function Icon({ name }: { name: string }) {
     return (
       <svg {...common}>
         <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.5 2.5M15.9 15.9l2.5 2.5M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5" />
+      </svg>
+    );
+  }
+  if (name === "file") {
+    return (
+      <svg {...common}>
+        <path d="M7 3.5h6.5L19 9v11.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z" />
+        <path d="M13.5 3.5V9H19" />
       </svg>
     );
   }

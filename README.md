@@ -38,6 +38,8 @@ flowchart TD
 | CV generation | `backend/app/services/cv.py` |
 | Insight page | `frontend/app/insight/page.tsx` |
 | AI analysis | `backend/app/services/insight.py` |
+| Master CV page | `frontend/app/cv/page.tsx` |
+| Master CV routes | `GET /master-cv`, `PUT /master-cv/current-highlights` |
 
 Scraped jobs and hand-added jobs live in one SQLite table. A later scrape updates the ad text and leaves the status as it is, so Applied and Removed stay put.
 

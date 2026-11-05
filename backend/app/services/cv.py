@@ -12,6 +12,9 @@ from app.models.db import ROOT
 from app.models.jobs import get_job
 
 HERE = Path(__file__).resolve().parent
+MASTER_CV = ROOT / "master_cv.json"
+_LI = re.compile(r"<li\b[^>]*>(.*?)</li>", re.IGNORECASE | re.DOTALL)
+_TAG = re.compile(r"<[^>]+>")
 
 
 def build_cv_prompt(job_data, master_cv):
@@ -106,12 +109,68 @@ def render_html_cv(tailored_data, master_cv, tech_stack, output_path):
     return output_path.name
 
 
+def load_master_cv():
+    # The master CV file can contain a raw newline inside a string.
+    return json.loads(MASTER_CV.read_text(encoding="utf-8"), strict=False)
+
+
+def current_experience(master_cv):
+    for experience in master_cv.get("experiences") or []:
+        if "present" in (experience.get("period") or "").lower():
+            return experience
+    return None
+
+
+def plain_highlights(highlights):
+    """Split a highlight that contains <li> tags into separate plain bullets."""
+    bullets = []
+    for highlight in highlights or []:
+        text = str(highlight)
+        items = _LI.findall(text)
+        if not items:
+            cleaned = text.strip()
+            if cleaned:
+                bullets.append(cleaned)
+            continue
+        lead = " ".join(_TAG.sub("", _LI.sub("", text)).split())
+        if lead:
+            bullets.append(lead)
+        for item in items:
+            cleaned = " ".join(_TAG.sub("", item).split())
+            if cleaned:
+                bullets.append(cleaned)
+    return bullets
+
+
+def master_cv_for_editor():
+    master_cv = load_master_cv()
+    current = current_experience(master_cv)
+    if current is not None:
+        current["highlights"] = plain_highlights(current.get("highlights"))
+    return master_cv
+
+
+def save_current_highlights(highlights):
+    cleaned = [item.strip() for item in highlights if isinstance(item, str) and item.strip()]
+    if not cleaned:
+        raise ValueError("Add at least one highlight.")
+    master_cv = load_master_cv()
+    current = current_experience(master_cv)
+    if current is None:
+        raise LookupError("No current role on the master CV.")
+    current["highlights"] = cleaned
+    MASTER_CV.write_text(
+        json.dumps(master_cv, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return master_cv_for_editor()
+
+
 def generate_cv(job_id):
     job = get_job(job_id)
     if job is None:
         raise LookupError("No job with that id.")
-    # The master CV file can contain a raw newline inside a string.
-    master_cv = json.loads((ROOT / "master_cv.json").read_text(encoding="utf-8"), strict=False)
+    master_cv = load_master_cv()
     print(f"Tailoring CV for {job['title']} at {job['company']}...")
     tailored = tailor_cv_content(job, master_cv)
     return render_html_cv(
