@@ -185,23 +185,32 @@ export default function Page() {
 
   return (
     <main>
-      <h1>Your Dashboard</h1>
-      <p className="quote">
-        “{quote}” — {author}
-      </p>
-      <div className="scrape">
+      <header className="hero">
+        <h1>Your Job Search Companion</h1>
+        <p className="lede">
+          Find opportunities, tailor your applications, and keep a positive, focused mindset throughout your career
+          journey.
+        </p>
+        <p className="quote">
+          “{quote}” — {author}
+        </p>
         <div className="scrape-actions">
-          <button type="button" onClick={scrape} disabled={scraping}>
+          <button type="button" className="primary" onClick={scrape} disabled={scraping}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="6" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
             {scraping ? "Getting jobs..." : "Get Latest Jobs"}
           </button>
           <a className="add-job" href="/add-job">
-            Add a Job
+            + Add a Job
           </a>
         </div>
         <p className="meta">One page of developer jobs in New Zealand. This takes a few minutes.</p>
-      </div>
+      </header>
       {message && <p className="message">{message}</p>}
 
+      <div className="jobs-card">
       <table className="positions">
         <thead>
           <tr>
@@ -243,11 +252,16 @@ export default function Page() {
               </td>
               <td>{job.company}</td>
               <td className="added">{createdDate(job.created_at)}</td>
-              <td>{STATUS_OPTIONS.find(([value]) => value === job.status)?.[1] || "New"}</td>
+              <td>
+                <span className={`pill pill-${job.status}`}>
+                  {STATUS_OPTIONS.find(([value]) => value === job.status)?.[1] || "New"}
+                </span>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
 
       {listed.map((job) => (
         <article key={job.id} id={`job-${job.id}`}>
