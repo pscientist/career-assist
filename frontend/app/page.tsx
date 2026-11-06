@@ -74,20 +74,39 @@ function highlight(text: string, terms: string[]) {
   return parts;
 }
 
-function RequirementsEditor({ jobId, onSaved }: { jobId: number; onSaved: (job: Job) => void }) {
-  const [text, setText] = useState("");
+function JobEditor({
+  job,
+  onSaved,
+  onCancel,
+}: {
+  job: Job;
+  onSaved: (job: Job) => void;
+  onCancel: () => void;
+}) {
+  const [form, setForm] = useState({
+    title: job.title,
+    company: job.company,
+    location: job.location,
+    url: job.url,
+    seek_id: job.seek_id,
+    requirements: job.requirements,
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function update(name: keyof typeof form, value: string) {
+    setForm({ ...form, [name]: value });
+  }
 
   async function save(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
     setError("");
     try {
-      const response = await fetch(`${API}/jobs/${jobId}/requirements`, {
+      const response = await fetch(`${API}/jobs/${job.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requirements: text }),
+        body: JSON.stringify(form),
       });
       if (!response.ok) {
         setError(await errorMessage(response));
@@ -95,7 +114,7 @@ function RequirementsEditor({ jobId, onSaved }: { jobId: number; onSaved: (job: 
       }
       onSaved(await response.json());
     } catch {
-      setError("Could not save the requirements.");
+      setError("Could not save the job.");
     } finally {
       setSaving(false);
     }
@@ -103,14 +122,37 @@ function RequirementsEditor({ jobId, onSaved }: { jobId: number; onSaved: (job: 
 
   return (
     <form className="requirements-edit" onSubmit={save}>
+      {(
+        [
+          ["title", "Title"],
+          ["company", "Company"],
+          ["location", "Location"],
+          ["url", "URL"],
+          ["seek_id", "Seek id"],
+        ] as const
+      ).map(([name, label]) => (
+        <label key={name}>
+          <span>{label}</span>
+          <input
+            value={form[name]}
+            required={name === "title" || name === "company"}
+            onChange={(event) => update(name, event.target.value)}
+          />
+        </label>
+      ))}
       <label>
         <span>Requirements</span>
-        <textarea value={text} onChange={(event) => setText(event.target.value)} />
+        <textarea value={form.requirements} onChange={(event) => update("requirements", event.target.value)} />
       </label>
       {error && <p className="message">{error}</p>}
-      <button type="submit" disabled={saving}>
-        {saving ? "Saving..." : "Save"}
-      </button>
+      <div className="scrape-actions">
+        <button type="submit" disabled={saving}>
+          {saving ? "Saving..." : "Save"}
+        </button>
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }
@@ -147,6 +189,7 @@ export default function Page() {
   const [scraping, setScraping] = useState(false);
   const [cvJobId, setCvJobId] = useState<number | null>(null);
   const [cvLinks, setCvLinks] = useState<Record<number, string>>({});
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [statusOrder, setStatusOrder] = useState<"asc" | "desc" | null>(null);
 
   const listed = statusOrder
@@ -247,7 +290,6 @@ export default function Page() {
             + Add a Job
           </a>
         </div>
-        <p className="meta">One page of developer jobs in New Zealand. This takes a few minutes.</p>
       </header>
       {message && <p className="message">{message}</p>}
 
@@ -341,6 +383,9 @@ export default function Page() {
             <button type="button" onClick={() => changeStatus(job.id, "deleted")}>
               Remove
             </button>
+            <button type="button" onClick={() => setEditingId(job.id)}>
+              Edit
+            </button>
           </div>
           {job.tech_stack.length > 0 && (
             <ul className="stack">
@@ -349,15 +394,17 @@ export default function Page() {
               ))}
             </ul>
           )}
-          {job.requirements.trim() ? (
-            <Requirements text={job.requirements} terms={job.tech_stack} />
-          ) : (
-            <RequirementsEditor
-              jobId={job.id}
-              onSaved={(saved) =>
-                setJobs((current) => current.map((item) => (item.id === saved.id ? saved : item)))
-              }
+          {editingId === job.id ? (
+            <JobEditor
+              job={job}
+              onSaved={(saved) => {
+                setJobs((current) => current.map((item) => (item.id === saved.id ? saved : item)));
+                setEditingId(null);
+              }}
+              onCancel={() => setEditingId(null)}
             />
+          ) : (
+            job.requirements.trim() && <Requirements text={job.requirements} terms={job.tech_stack} />
           )}
         </article>
       ))}

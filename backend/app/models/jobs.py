@@ -133,6 +133,39 @@ def upsert_scraped(jobs):
             )
 
 
+def update_job(job_id, title, company, location="", url="", seek_id="", tech_stack=None, requirements=""):
+    title = (title or "").strip()
+    company = (company or "").strip()
+    if not title or not company:
+        raise ValueError("Title and company are required.")
+    try:
+        with connect() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE jobs
+                SET seek_id = ?, title = ?, company = ?, location = ?, url = ?,
+                    tech_stack = ?, requirements = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    _blank(seek_id),
+                    title,
+                    company,
+                    _blank(location),
+                    _blank(url),
+                    json.dumps(tech_stack or []),
+                    requirements or "",
+                    _now(),
+                    job_id,
+                ),
+            )
+            if cursor.rowcount == 0:
+                return None
+    except sqlite3.IntegrityError as error:
+        raise ValueError("That Seek id is already stored.") from error
+    return get_job(job_id)
+
+
 def save_requirements(job_id, requirements, tech_stack):
     text = (requirements or "").strip()
     if not text:

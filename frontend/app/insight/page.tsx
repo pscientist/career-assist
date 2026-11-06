@@ -59,7 +59,27 @@ export default function InsightPage() {
   const [empty, setEmpty] = useState(false);
   const [message, setMessage] = useState("");
   const [analysis, setAnalysis] = useState("");
+  const [generatedAt, setGeneratedAt] = useState("");
   const [analysing, setAnalysing] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch(`${API}/insights/ai_in_industry`);
+        if (!response.ok || cancelled) return;
+        const body = await response.json();
+        if (cancelled) return;
+        setAnalysis(typeof body.analysis === "string" ? body.analysis : "");
+        setGeneratedAt(typeof body.created_at === "string" ? body.created_at : "");
+      } catch {
+        // The bars still load from the jobs list.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +111,7 @@ export default function InsightPage() {
       }
       const body = await response.json();
       setAnalysis(typeof body.analysis === "string" ? body.analysis : "");
+      setGeneratedAt(typeof body.created_at === "string" ? body.created_at : "");
     } catch {
       setMessage("Could not analyse AI skills.");
     } finally {
@@ -106,11 +127,18 @@ export default function InsightPage() {
       </header>
       {message && <p className="message">{message}</p>}
       <div className="jobs-card analysis">
-        <h2>Summary on AI in the industry</h2>
-        <button type="button" className="primary" onClick={analyse} disabled={analysing}>
-          {analysing ? "Analysing..." : "Get Insight"}
-        </button>
-        {analysis && <p>{analysis}</p>}
+        <div className="analysis-prompt">
+          <p>Curious about AI in the developer industry?</p>
+          <button type="button" className="primary" onClick={analyse} disabled={analysing}>
+            {analysing ? "Analysing..." : "Get Insight"}
+          </button>
+        </div>
+        {analysis && (
+          <>
+            <h2>Insights from {dayMonthYear(generatedAt)}</h2>
+            <p>{analysis}</p>
+          </>
+        )}
       </div>
       {rows.length > 0 && (
         <div className="jobs-card">

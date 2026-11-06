@@ -235,6 +235,21 @@ form.add-job {
   margin: 12px 0 0;
 }
 
+.analysis-prompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analysis-prompt p {
+  margin: 0;
+  min-width: 0;
+}
+
+.analysis-prompt button {
+  flex-shrink: 0;
+}
+
 .jobs-card {
   margin-top: 8px;
   padding: 4px 8px 8px;
@@ -313,6 +328,7 @@ form.requirements-edit span {
 
 form.add-job input,
 form.add-job textarea,
+form.requirements-edit input,
 form.requirements-edit textarea {
   width: 100%;
   box-sizing: border-box;

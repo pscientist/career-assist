@@ -11,7 +11,7 @@ const MENU = [
   { label: "Master CV", href: "/cv", icon: "file" },
   { label: "Interview Practice", href: "/interview", icon: "chat" },
   { label: "Improvement Tips", href: "/tips", icon: "bulb" },
-  { label: "Guidance & Mindset", href: "#", icon: "book" },
+  { label: "Weekly Achievements", href: "/achievements", icon: "book" },
 ] as const;
 
 function Icon({ name }: { name: string }) {
@@ -111,7 +111,10 @@ export function Shell({ children }: { children: ReactNode }) {
               </a>
             );
           })}
-          <a className="menu-link settings" href="#">
+          <a
+            className={pathname === "/settings" ? "menu-link settings active" : "menu-link settings"}
+            href="/settings"
+          >
             <Icon name="settings" />
             Settings
           </a>

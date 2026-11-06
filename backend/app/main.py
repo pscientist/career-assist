@@ -8,10 +8,10 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.models.db import ROOT, init_db
-from app.models.jobs import add_job, get_job, list_jobs, save_requirements, set_status, upsert_scraped
+from app.models.jobs import add_job, get_job, list_jobs, save_requirements, set_status, update_job, upsert_scraped
 from app.models.notes import add_note, list_notes
 from app.services.cv import generate_cv, master_cv_for_editor, save_current_highlights
-from app.services.insight import analyse_ai_skills
+from app.services.insight import analyse_ai_skills, load_market_insight, save_market_insight
 from app.services.scrape import extract_tech_stack, scrape_seek_nz
 
 # From backend/: ../venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8765
@@ -62,8 +62,8 @@ class NoteIn(BaseModel):
     note: str = ""
 
 
-def _stack(value):
-    return [part.strip() for part in (value or "").split(",") if part.strip()]
+def _parsed_stack(title, requirements):
+    return extract_tech_stack(f"{title}\n{requirements}")
 
 
 @app.get("/interview-notes")
@@ -93,11 +93,31 @@ def create_job(body: JobIn):
             body.location,
             body.url,
             body.seek_id,
-            _stack(body.tech_stack),
+            _parsed_stack(body.title, body.requirements),
             body.requirements,
         )
     except ValueError as error:
         raise HTTPException(400, str(error)) from error
+
+
+@app.put("/jobs/{job_id}")
+def edit_job(job_id: int, body: JobIn):
+    try:
+        job = update_job(
+            job_id,
+            body.title,
+            body.company,
+            body.location,
+            body.url,
+            body.seek_id,
+            _parsed_stack(body.title, body.requirements),
+            body.requirements,
+        )
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from error
+    if job is None:
+        raise HTTPException(404, "No job with that id.")
+    return job
 
 
 @app.put("/jobs/{job_id}/requirements")
@@ -136,10 +156,15 @@ async def scrape():
     return list_jobs()
 
 
+@app.get("/insights/ai_in_industry")
+def ai_in_industry():
+    return load_market_insight()
+
+
 @app.post("/insights/ai")
 def ai_insight():
     try:
-        return {"analysis": analyse_ai_skills()}
+        return save_market_insight(analyse_ai_skills())
     except Exception as error:
         raise HTTPException(500, f"Could not analyse AI skills. {error}") from error
 

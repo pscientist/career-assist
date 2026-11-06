@@ -11,7 +11,6 @@ const emptyForm = {
   location: "",
   url: "",
   seek_id: "",
-  tech_stack: "",
   requirements: "",
 };
 
@@ -68,7 +67,6 @@ export default function AddJobPage() {
             ["location", "Location", false],
             ["url", "URL", false],
             ["seek_id", "Seek id", false],
-            ["tech_stack", "Tech stack", false],
           ] as const
         ).map(([name, label, required]) => (
           <label key={name}>
@@ -77,7 +75,6 @@ export default function AddJobPage() {
               name={name}
               value={form[name]}
               required={required}
-              placeholder={name === "tech_stack" ? "react, python, aws" : undefined}
               onChange={(event) => setForm({ ...form, [name]: event.target.value })}
             />
           </label>

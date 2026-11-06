@@ -1,5 +1,7 @@
+import json
 import os
 import re
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -28,6 +30,31 @@ LABELS = {
 }
 
 EXCERPT = 500
+INSIGHT_PATH = ROOT / "market_insight.json"
+
+
+def load_market_insight():
+    if not INSIGHT_PATH.is_file():
+        return {"analysis": "", "created_at": ""}
+    try:
+        data = json.loads(INSIGHT_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"analysis": "", "created_at": ""}
+    if not isinstance(data, dict):
+        return {"analysis": "", "created_at": ""}
+    return {
+        "analysis": data.get("analysis") or "",
+        "created_at": data.get("created_at") or "",
+    }
+
+
+def save_market_insight(analysis):
+    saved = {
+        "analysis": analysis,
+        "created_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+    }
+    INSIGHT_PATH.write_text(json.dumps(saved, indent=2) + "\n", encoding="utf-8")
+    return saved
 
 
 def _mentioned(job):
