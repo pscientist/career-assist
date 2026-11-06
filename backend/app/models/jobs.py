@@ -101,7 +101,7 @@ def set_status(job_id, status):
 
 
 def upsert_scraped(jobs):
-    """Insert scraped ads. A later scrape refreshes the text and leaves status unchanged."""
+    """Insert scraped ads. A Seek id that is already stored is left unchanged."""
     now = _now()
     with connect() as connection:
         for job in jobs:
@@ -117,14 +117,7 @@ def upsert_scraped(jobs):
                     status, created_at, updated_at
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?)
-                ON CONFLICT(seek_id) DO UPDATE SET
-                    title = excluded.title,
-                    company = excluded.company,
-                    location = excluded.location,
-                    url = excluded.url,
-                    tech_stack = excluded.tech_stack,
-                    requirements = excluded.requirements,
-                    updated_at = excluded.updated_at
+                ON CONFLICT(seek_id) DO NOTHING
                 """,
                 (
                     seek_id,
@@ -138,3 +131,21 @@ def upsert_scraped(jobs):
                     now,
                 ),
             )
+
+
+def save_requirements(job_id, requirements, tech_stack):
+    text = (requirements or "").strip()
+    if not text:
+        raise ValueError("Add the requirements.")
+    with connect() as connection:
+        cursor = connection.execute(
+            """
+            UPDATE jobs
+            SET requirements = ?, tech_stack = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (text, json.dumps(tech_stack or []), _now(), job_id),
+        )
+        if cursor.rowcount == 0:
+            return None
+    return get_job(job_id)

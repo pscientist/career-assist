@@ -6,6 +6,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 DB_PATH = ROOT / "jobs.sqlite"
 
+_NOTES_SCHEMA = """
+CREATE TABLE IF NOT EXISTS interview_notes (
+    id INTEGER PRIMARY KEY,
+    note TEXT NOT NULL,
+    created_at TEXT NOT NULL
+)
+"""
+
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS jobs (
     id INTEGER PRIMARY KEY,
@@ -29,6 +37,7 @@ def connect():
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
     connection.execute(_SCHEMA)
+    connection.execute(_NOTES_SCHEMA)
     try:
         yield connection
         connection.commit()

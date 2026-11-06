@@ -243,6 +243,16 @@ form.add-job {
   border-radius: 16px;
 }
 
+.question-list {
+  margin: 12px 8px 16px;
+  padding-left: 1.4em;
+}
+
+.question-list li {
+  margin: 10px 0;
+  line-height: 1.45;
+}
+
 .pill {
   display: inline-block;
   border-radius: 999px;
@@ -289,18 +299,21 @@ article {
   border-radius: 8px;
 }
 
-form.add-job label {
+form.add-job label,
+form.requirements-edit label {
   display: block;
   margin: 12px 0;
 }
 
-form.add-job span {
+form.add-job span,
+form.requirements-edit span {
   display: block;
   margin-bottom: 4px;
 }
 
 form.add-job input,
-form.add-job textarea {
+form.add-job textarea,
+form.requirements-edit textarea {
   width: 100%;
   box-sizing: border-box;
 }

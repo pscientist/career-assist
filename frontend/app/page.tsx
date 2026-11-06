@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { techLabel } from "./tech";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
@@ -74,8 +74,48 @@ function highlight(text: string, terms: string[]) {
   return parts;
 }
 
+function RequirementsEditor({ jobId, onSaved }: { jobId: number; onSaved: (job: Job) => void }) {
+  const [text, setText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch(`${API}/jobs/${jobId}/requirements`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requirements: text }),
+      });
+      if (!response.ok) {
+        setError(await errorMessage(response));
+        return;
+      }
+      onSaved(await response.json());
+    } catch {
+      setError("Could not save the requirements.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form className="requirements-edit" onSubmit={save}>
+      <label>
+        <span>Requirements</span>
+        <textarea value={text} onChange={(event) => setText(event.target.value)} />
+      </label>
+      {error && <p className="message">{error}</p>}
+      <button type="submit" disabled={saving}>
+        {saving ? "Saving..." : "Save"}
+      </button>
+    </form>
+  );
+}
+
 function Requirements({ text, terms }: { text: string; terms: string[] }) {
-  if (!text.trim()) return <p className="empty">No requirements captured</p>;
   return text
     .trim()
     .split(/\n\s*\n/)
@@ -309,7 +349,16 @@ export default function Page() {
               ))}
             </ul>
           )}
-          <Requirements text={job.requirements} terms={job.tech_stack} />
+          {job.requirements.trim() ? (
+            <Requirements text={job.requirements} terms={job.tech_stack} />
+          ) : (
+            <RequirementsEditor
+              jobId={job.id}
+              onSaved={(saved) =>
+                setJobs((current) => current.map((item) => (item.id === saved.id ? saved : item)))
+              }
+            />
+          )}
         </article>
       ))}
     </main>

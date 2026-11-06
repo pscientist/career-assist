@@ -18,6 +18,7 @@ Return a strictly valid JSON object with one key:
 Each object is {"theme": "...", "match": "..."}.
 "theme" is a short label for one requirement (for example "Full-Stack Development").
 "match" is one sentence of evidence from the master CV only: real employers, products, and tools.
+
 Do not claim a technology, framework, or employer that is not in the master CV.
 Plz write in the first person.
 

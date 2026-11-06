@@ -8,10 +8,11 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.models.db import ROOT, init_db
-from app.models.jobs import add_job, get_job, list_jobs, set_status, upsert_scraped
+from app.models.jobs import add_job, get_job, list_jobs, save_requirements, set_status, upsert_scraped
+from app.models.notes import add_note, list_notes
 from app.services.cv import generate_cv, master_cv_for_editor, save_current_highlights
 from app.services.insight import analyse_ai_skills
-from app.services.scrape import scrape_seek_nz
+from app.services.scrape import extract_tech_stack, scrape_seek_nz
 
 # From backend/: ../venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8765
 HOST = "127.0.0.1"
@@ -34,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# Empty strings are the defaults.
 class JobIn(BaseModel):
     title: str = ""
     company: str = ""
@@ -44,7 +45,7 @@ class JobIn(BaseModel):
     tech_stack: str = ""
     requirements: str = ""
 
-
+# FastAPI matches JSON keys in the request to the fields declared on the class.
 class StatusIn(BaseModel):
     status: str
 
@@ -53,8 +54,29 @@ class HighlightsIn(BaseModel):
     highlights: list[str]
 
 
+class RequirementsIn(BaseModel):
+    requirements: str = ""
+
+
+class NoteIn(BaseModel):
+    note: str = ""
+
+
 def _stack(value):
     return [part.strip() for part in (value or "").split(",") if part.strip()]
+
+
+@app.get("/interview-notes")
+def interview_notes():
+    return list_notes()
+
+
+@app.post("/interview-notes")
+def create_interview_note(body: NoteIn):
+    try:
+        return add_note(body.note)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from error
 
 
 @app.get("/jobs")
@@ -76,6 +98,18 @@ def create_job(body: JobIn):
         )
     except ValueError as error:
         raise HTTPException(400, str(error)) from error
+
+
+@app.put("/jobs/{job_id}/requirements")
+def update_requirements(job_id: int, body: RequirementsIn):
+    text = body.requirements.strip()
+    try:
+        job = save_requirements(job_id, text, extract_tech_stack(text))
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from error
+    if job is None:
+        raise HTTPException(404, "No job with that id.")
+    return job
 
 
 @app.post("/jobs/{job_id}/status")

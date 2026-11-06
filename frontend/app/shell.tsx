@@ -9,9 +9,8 @@ const MENU = [
   { label: "Dashboard", href: "/", icon: "home" },
   { label: "Job Market Insight", href: "/insight", icon: "chart" },
   { label: "Master CV", href: "/cv", icon: "file" },
-  { label: "Discover Jobs", href: "#", icon: "search" },
-  { label: "My Applications", href: "#", icon: "layers" },
-  { label: "AI CV Toolkit", href: "#", icon: "spark" },
+  { label: "Interview Practice", href: "/interview", icon: "chat" },
+  { label: "Improvement Tips", href: "/tips", icon: "bulb" },
   { label: "Guidance & Mindset", href: "#", icon: "book" },
 ] as const;
 
@@ -39,20 +38,18 @@ function Icon({ name }: { name: string }) {
       </svg>
     );
   }
-  if (name === "search") {
+  if (name === "chat") {
     return (
       <svg {...common}>
-        <circle cx="11" cy="11" r="6" />
-        <path d="m20 20-3.5-3.5" />
+        <path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v6A2.5 2.5 0 0 1 16.5 15H12l-4 3.5V15H7.5A2.5 2.5 0 0 1 5 12.5z" />
       </svg>
     );
   }
-  if (name === "layers") {
+  if (name === "bulb") {
     return (
       <svg {...common}>
-        <path d="m12 3 8 4.5-8 4.5L4 7.5 12 3z" />
-        <path d="m4 12 8 4.5 8-4.5" />
-        <path d="m4 16.5 8 4.5 8-4.5" />
+        <path d="M9 18h6M9.5 21h5" />
+        <path d="M8 14.5a5 5 0 1 1 8 0c-.7.8-1.2 1.6-1.4 2.5h-5.2c-.2-.9-.7-1.7-1.4-2.5z" />
       </svg>
     );
   }

@@ -62,13 +62,6 @@
     {% endif %}
   </div>
 
-  <div class="section-title">Professional Summary</div>
-  <ul class="summary">
-    {% for item in tailored_summary %}
-      <li><strong>{{ item.theme | e }}:</strong> {{ item.match | highlight_skills | linkify }}</li>
-    {% endfor %}
-  </ul>
-
   <div class="section-title">Relevant Experience</div>
   {% for exp in experiences %}
     <div class="job">
@@ -96,6 +89,13 @@
       {% endfor %}
     </div>
   {% endfor %}
+
+  <div class="section-title">Professional Summary</div>
+  <ul class="summary">
+    {% for item in tailored_summary %}
+      <li><strong>{{ item.theme | e }}:</strong> {{ item.match | highlight_skills | linkify }}</li>
+    {% endfor %}
+  </ul>
 
   <div class="section-title">Online Profiles</div>
   {% for profile in online_profiles %}

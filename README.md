@@ -41,7 +41,7 @@ flowchart TD
 | Master CV page | `frontend/app/cv/page.tsx` |
 | Master CV routes | `GET /master-cv`, `PUT /master-cv/current-highlights` |
 
-Scraped jobs and hand-added jobs live in one SQLite table. A later scrape updates the ad text and leaves the status as it is, so Applied and Removed stay put.
+Scraped jobs and hand-added jobs live in one SQLite table. A later scrape adds Seek ids it has not stored yet and leaves existing rows as they are, so Applied and Removed stay put.
 
 ## Analyse on Job Market Insight 
 
