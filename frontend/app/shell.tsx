@@ -123,9 +123,20 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="workspace">
         <header className="topbar">
           <p>Welcome back, {USERNAME}</p>
-          <span className="avatar" aria-label={`${USERNAME} avatar placeholder`}>
-            {USERNAME.slice(0, 1)}
-          </span>
+          <div className="topbar-end">
+            <nav className="account-links" aria-label="Account">
+              <a className={pathname === "/register" ? "active" : undefined} href="/register">
+                Register
+              </a>
+              <span aria-hidden="true">|</span>
+              <a className={pathname === "/login" ? "active" : undefined} href="/login">
+                Login
+              </a>
+            </nav>
+            <span className="avatar" aria-label={`${USERNAME} avatar placeholder`}>
+              {USERNAME.slice(0, 1)}
+            </span>
+          </div>
         </header>
         <div className="workspace-body">{children}</div>
       </div>

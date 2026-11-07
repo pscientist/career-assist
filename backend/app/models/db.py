@@ -14,6 +14,23 @@ CREATE TABLE IF NOT EXISTS interview_notes (
 )
 """
 
+_USERS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+)
+"""
+
+_SESSIONS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS sessions (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+)
+"""
+
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS jobs (
     id INTEGER PRIMARY KEY,
@@ -38,6 +55,8 @@ def connect():
     connection.row_factory = sqlite3.Row
     connection.execute(_SCHEMA)
     connection.execute(_NOTES_SCHEMA)
+    connection.execute(_USERS_SCHEMA)
+    connection.execute(_SESSIONS_SCHEMA)
     try:
         yield connection
         connection.commit()

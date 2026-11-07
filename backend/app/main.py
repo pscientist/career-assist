@@ -1,8 +1,9 @@
 import asyncio
 import re
 from contextlib import asynccontextmanager
+from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -10,6 +11,7 @@ from pydantic import BaseModel
 from app.models.db import ROOT, init_db
 from app.models.jobs import add_job, get_job, list_jobs, save_requirements, set_status, update_job, upsert_scraped
 from app.models.notes import add_note, list_notes
+from app.models.users import delete_session, login_user, register_user, user_for_token
 from app.services.cv import generate_cv, master_cv_for_editor, save_current_highlights
 from app.services.insight import analyse_ai_skills, load_market_insight, save_market_insight
 from app.services.scrape import extract_tech_stack, scrape_seek_nz
@@ -62,8 +64,52 @@ class NoteIn(BaseModel):
     note: str = ""
 
 
+class AccountIn(BaseModel):
+    username: str = ""
+    password: str = ""
+
+
+def _bearer(authorization):
+    if not authorization:
+        raise HTTPException(401, "Log in first.")
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token.strip():
+        raise HTTPException(401, "Log in first.")
+    return token.strip()
+
+
 def _parsed_stack(title, requirements):
     return extract_tech_stack(f"{title}\n{requirements}")
+
+
+@app.post("/register")
+def register(body: AccountIn):
+    try:
+        return register_user(body.username, body.password)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from error
+
+
+@app.post("/login")
+def login(body: AccountIn):
+    account = login_user(body.username, body.password)
+    if account is None:
+        raise HTTPException(401, "Those details do not match.")
+    return account
+
+
+@app.get("/me")
+def me(authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
+    return account
+
+
+@app.post("/logout")
+def logout(authorization: Optional[str] = Header(default=None)):
+    delete_session(_bearer(authorization))
+    return {"ok": True}
 
 
 @app.get("/interview-notes")

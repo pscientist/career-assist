@@ -108,6 +108,27 @@ body {
   color: #5c5470;
 }
 
+.topbar-end {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.account-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.account-links span {
+  color: #b7b0c9;
+}
+
+.account-links a.active {
+  color: #5b3cc4;
+}
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -189,7 +210,8 @@ textarea {
 }
 
 .primary,
-form.add-job button {
+form.add-job button,
+form.account button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -315,19 +337,26 @@ article {
 }
 
 form.add-job label,
+form.account label,
 form.requirements-edit label {
   display: block;
   margin: 12px 0;
 }
 
 form.add-job span,
+form.account span,
 form.requirements-edit span {
   display: block;
   margin-bottom: 4px;
 }
 
+form.account {
+  max-width: 420px;
+}
+
 form.add-job input,
 form.add-job textarea,
+form.account input,
 form.requirements-edit input,
 form.requirements-edit textarea {
   width: 100%;
