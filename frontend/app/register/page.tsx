@@ -15,6 +15,7 @@ async function errorMessage(response: Response) {
 }
 
 export default function RegisterPage() {
+  const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -28,7 +29,7 @@ export default function RegisterPage() {
       const response = await fetch(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ name, username, password }),
       });
       if (!response.ok) {
         setMessage(await errorMessage(response));
@@ -36,7 +37,7 @@ export default function RegisterPage() {
       }
       const body = await response.json();
       localStorage.setItem("careerassist_token", body.token);
-      setMessage(`Registered as ${body.username}.`);
+      setMessage(`Registered as ${body.name}.`);
       setPassword("");
     } catch {
       setMessage("Could not register.");
@@ -53,6 +54,16 @@ export default function RegisterPage() {
       </header>
       {message && <p className="message">{message}</p>}
       <form className="add-job account" onSubmit={register}>
+        <label>
+          <span>Name</span>
+          <input
+            name="name"
+            autoComplete="name"
+            value={name}
+            required
+            onChange={(event) => setName(event.target.value)}
+          />
+        </label>
         <label>
           <span>Username</span>
           <input

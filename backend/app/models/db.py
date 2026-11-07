@@ -18,6 +18,7 @@ _USERS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     created_at TEXT NOT NULL
 )
@@ -57,6 +58,9 @@ def connect():
     connection.execute(_NOTES_SCHEMA)
     connection.execute(_USERS_SCHEMA)
     connection.execute(_SESSIONS_SCHEMA)
+    user_columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
+    if "name" not in user_columns:
+        connection.execute("ALTER TABLE users ADD COLUMN name TEXT NOT NULL DEFAULT ''")
     try:
         yield connection
         connection.commit()

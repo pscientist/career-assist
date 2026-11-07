@@ -65,6 +65,7 @@ class NoteIn(BaseModel):
 
 
 class AccountIn(BaseModel):
+    name: str = ""
     username: str = ""
     password: str = ""
 
@@ -85,7 +86,7 @@ def _parsed_stack(title, requirements):
 @app.post("/register")
 def register(body: AccountIn):
     try:
-        return register_user(body.username, body.password)
+        return register_user(body.name, body.username, body.password)
     except ValueError as error:
         raise HTTPException(400, str(error)) from error
 
