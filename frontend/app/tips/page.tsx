@@ -26,6 +26,12 @@ async function errorMessage(response: Response) {
   return "Something went wrong.";
 }
 
+function authHeaders() {
+  const token = localStorage.getItem("careerassist_token");
+  if (!token) return null;
+  return { Authorization: `Bearer ${token}` };
+}
+
 export default function ImprovementTipsPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [draft, setDraft] = useState("");
@@ -33,10 +39,19 @@ export default function ImprovementTipsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    const headers = authHeaders();
+    if (!headers) {
+      setMessage("Log in to see your notes.");
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch(`${API}/interview-notes`);
+        const response = await fetch(`${API}/interview-notes`, { headers });
+        if (response.status === 401) {
+          if (!cancelled) setMessage("Log in to see your notes.");
+          return;
+        }
         if (!response.ok) {
           if (!cancelled) setMessage("Could not load notes.");
           return;
@@ -54,14 +69,23 @@ export default function ImprovementTipsPage() {
 
   async function addNote(event: FormEvent) {
     event.preventDefault();
+    const headers = authHeaders();
+    if (!headers) {
+      setMessage("Log in to see your notes.");
+      return;
+    }
     setSaving(true);
     setMessage("");
     try {
       const response = await fetch(`${API}/interview-notes`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify({ note: draft }),
       });
+      if (response.status === 401) {
+        setMessage("Log in to see your notes.");
+        return;
+      }
       if (!response.ok) {
         setMessage(await errorMessage(response));
         return;

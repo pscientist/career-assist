@@ -10,7 +10,8 @@ _NOTES_SCHEMA = """
 CREATE TABLE IF NOT EXISTS interview_notes (
     id INTEGER PRIMARY KEY,
     note TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    user_id INTEGER
 )
 """
 
@@ -61,6 +62,9 @@ def connect():
     user_columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
     if "name" not in user_columns:
         connection.execute("ALTER TABLE users ADD COLUMN name TEXT NOT NULL DEFAULT ''")
+    note_columns = {row[1] for row in connection.execute("PRAGMA table_info(interview_notes)")}
+    if "user_id" not in note_columns:
+        connection.execute("ALTER TABLE interview_notes ADD COLUMN user_id INTEGER")
     try:
         yield connection
         connection.commit()

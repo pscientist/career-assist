@@ -100,7 +100,7 @@ def user_for_token(token):
     with connect() as connection:
         row = connection.execute(
             """
-            SELECT users.username, users.name
+            SELECT users.id, users.username, users.name
             FROM sessions
             JOIN users ON users.id = sessions.user_id
             WHERE sessions.token = ?
@@ -109,7 +109,7 @@ def user_for_token(token):
         ).fetchone()
     if row is None:
         return None
-    return {"username": row["username"], "name": row["name"] or ""}
+    return {"id": row["id"], "username": row["username"], "name": row["name"] or ""}
 
 
 def delete_session(token):

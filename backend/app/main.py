@@ -114,14 +114,20 @@ def logout(authorization: Optional[str] = Header(default=None)):
 
 
 @app.get("/interview-notes")
-def interview_notes():
-    return list_notes()
+def interview_notes(authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
+    return list_notes(account["id"])
 
 
 @app.post("/interview-notes")
-def create_interview_note(body: NoteIn):
+def create_interview_note(body: NoteIn, authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
     try:
-        return add_note(body.note)
+        return add_note(body.note, account["id"])
     except ValueError as error:
         raise HTTPException(400, str(error)) from error
 
