@@ -6,6 +6,14 @@ Job Market Insight reads the stored ads and asks the model which AI tools employ
 
 The browser talks only to the API. Playwright and the OpenAI calls stay behind that API, and only the API writes to the database.
 
+## CV
+
+CareerAssist — a job tracker that scrapes Seek listings, stores application status, and generates a tailored CV. Next.js frontend, FastAPI REST API, SQLite.
+
+- Split the app into a Next.js client and a FastAPI REST API so the browser only exchanges JSON; scraping, OpenAI calls, and the SQLite database stay behind the API.
+- Added account login with bearer-token sessions: the client stores the token and sends it on each request as an Authorization header, and the API checks it before returning that user’s notes.
+- Built endpoints for job tracking, Seek scraping with Playwright, CV generation, and job-market analysis, with the React pages calling those routes through fetch.
+
 ## Tech stack
 
 Python, React, JavaScript/TypeScript, OpenAI, SQL, Cursor
