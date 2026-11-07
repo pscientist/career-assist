@@ -9,9 +9,17 @@ TECH_WATCHLIST = [
     "python", "javascript", "typescript", "react", "next.js",
     "node.js", "php", "postgresql", "aws", "docker", "fastapi",
     "django", "flask", "vue", "angular", "azure", "openai", "anthropic",
-    "java", "wordpress", "claude code", "ai", "cursor",".net","c#","restful api",
-    "codex",
+    "java", "wordpress", "claude code", "ai", "cursor", ".net", "c#", "net", "c++",
+    "restful api", "codex",
 ]
+
+# #, ., and + are not word characters, so a boundary on both sides misses these.
+_SPECIAL_TECH = {
+    "c#": r"\bc#(?!\w)",
+    "c++": r"\bc\+\+(?!\w)",
+    ".net": r"\.net\b",
+    "net": r"(?<!\.)\bnet\b",
+}
 
 
 def extract_tech_stack(text):
@@ -20,7 +28,7 @@ def extract_tech_stack(text):
     text_lower = text.lower()
     found_tech = []
     for tech in TECH_WATCHLIST:
-        pattern = r"\b" + re.escape(tech) + r"\b"
+        pattern = _SPECIAL_TECH.get(tech) or r"\b" + re.escape(tech) + r"\b"
         if re.search(pattern, text_lower):
             found_tech.append(tech)
     return found_tech

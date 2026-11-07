@@ -103,7 +103,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
         <nav className="menu">
           {MENU.map((item) => {
-            const active = item.href !== "#" && pathname === item.href;
+            const active = pathname === item.href;
             return (
               <a key={item.label} className={active ? "menu-link active" : "menu-link"} href={item.href}>
                 <Icon name={item.icon} />

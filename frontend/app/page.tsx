@@ -58,10 +58,18 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function termPattern(term: string) {
+  const escaped = escapeRegExp(term);
+  if (term === "c#" || term === "c++") return `\\b${escaped}(?!\\w)`;
+  if (term === ".net") return `\\.net\\b`;
+  if (term === "net") return `(?<!\\.)\\bnet\\b`;
+  return `\\b${escaped}\\b`;
+}
+
 function highlight(text: string, terms: string[]) {
   const usable = terms.filter(Boolean).sort((a, b) => b.length - a.length);
   if (!usable.length) return text;
-  const pattern = new RegExp(`\\b(?:${usable.map(escapeRegExp).join("|")})\\b`, "gi");
+  const pattern = new RegExp(`(?:${usable.map(termPattern).join("|")})`, "gi");
   const parts = [];
   let last = 0;
   for (const match of text.matchAll(pattern)) {

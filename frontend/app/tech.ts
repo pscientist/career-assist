@@ -2,6 +2,10 @@ const FIXED: Record<string, string> = {
   fastapi: "FastAPI",
   ai: "AI",
   openai: "OpenAI",
+  "c#": "C#",
+  ".net": ".NET",
+  net: "NET",
+  "c++": "C++",
 };
 
 export function techLabel(term: string) {
