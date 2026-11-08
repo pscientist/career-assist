@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, MouseEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { techLabel } from "./tech";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
@@ -198,6 +199,7 @@ function authHeaders() {
 }
 
 export default function Page() {
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [message, setMessage] = useState("");
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
@@ -242,12 +244,16 @@ export default function Page() {
     loadJobs().catch(() => setMessage("Could not load jobs."));
   }, []);
 
+  function openAddJob(event: MouseEvent<HTMLAnchorElement>) {
+    if (authHeaders()) return;
+    event.preventDefault();
+    router.push("/login");
+  }
+
   async function scrape() {
     const headers = authHeaders();
-    if (!headers) {
-      setSignedIn(false);
-      setJobs([]);
-      setMessage("Log in to see your jobs.");
+    if (!headers || signedIn === false) {
+      router.push("/login");
       return;
     }
     setScraping(true);
@@ -257,7 +263,7 @@ export default function Page() {
       if (response.status === 401) {
         setSignedIn(false);
         setJobs([]);
-        setMessage("Log in to see your jobs.");
+        router.push("/login");
         return;
       }
       if (!response.ok) {
@@ -330,7 +336,11 @@ export default function Page() {
             </svg>
             {scraping ? "Getting jobs..." : "Get Latest Jobs"}
           </button>
-          <a className="add-job" href="/add-job">
+          <a
+            className="add-job"
+            href={signedIn === false ? "/login" : "/add-job"}
+            onClick={openAddJob}
+          >
             + Add a Job
           </a>
         </div>
