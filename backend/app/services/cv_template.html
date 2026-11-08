@@ -97,17 +97,19 @@
     {% endfor %}
   </ul>
 
-  <div class="section-title">Online Profiles</div>
-  {% for profile in online_profiles %}
-    <div class="job">
-      <div class="job-title">{{ profile.name }} — <a href="{{ profile.url }}">{{ profile.url }}</a></div>
-      <ul>
-        {% for bullet in profile.highlights %}
-          <li>{{ bullet | highlight_skills | linkify }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-  {% endfor %}
+  <div class="section-title">Technical Writing &amp; Community Leadership</div>
+  <div class="job">
+    <div class="job-title">Dev.to Community Moderator &amp; Technical Author</div>
+    <ul>
+      <li>Active contributor and community moderator on one of the world's largest developer platforms (3.2K+ followers), publishing in-depth architectural guides and engineering diaries (recognized with CSS Article of the Week).</li>
+    </ul>
+  </div>
+  <div class="job">
+    <div class="job-title">Technical Creator</div>
+    <ul>
+      <li>Produce educational video content and software tutorials focusing on modern mobile engineering, Expo workflows, and full-stack deployment pipelines.</li>
+    </ul>
+  </div>
 
   <div class="section-title">Education</div>
   {% for edu in education %}
