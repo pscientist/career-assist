@@ -1,9 +1,13 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
-const USERNAME = "Cathy";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
+
+type Account = {
+  name: string;
+};
 
 const MENU = [
   { label: "Dashboard", href: "/", icon: "home" },
@@ -86,6 +90,59 @@ function Icon({ name }: { name: string }) {
 
 export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [account, setAccount] = useState<Account | null>(null);
+  const session = useRef(0);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAccount() {
+      const request = ++session.current;
+      const token = localStorage.getItem("careerassist_token");
+      if (!token) {
+        if (active && request === session.current) setAccount(null);
+        return;
+      }
+      try {
+        const response = await fetch(`${API}/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!active || request !== session.current) return;
+        if (!response.ok) {
+          setAccount(null);
+          return;
+        }
+        const body = await response.json();
+        const name = String(body.name || body.username || "").trim();
+        setAccount(name ? { name } : null);
+      } catch {
+        if (active && request === session.current) setAccount(null);
+      }
+    }
+
+    loadAccount();
+    window.addEventListener("careerassist-auth", loadAccount);
+    return () => {
+      active = false;
+      window.removeEventListener("careerassist-auth", loadAccount);
+    };
+  }, [pathname]);
+
+  async function logout() {
+    session.current += 1;
+    const token = localStorage.getItem("careerassist_token");
+    localStorage.removeItem("careerassist_token");
+    setAccount(null);
+    if (!token) return;
+    try {
+      await fetch(`${API}/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      // The bar already shows Register and Login.
+    }
+  }
 
   return (
     <div className="app">
@@ -122,20 +179,30 @@ export function Shell({ children }: { children: ReactNode }) {
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <p>Welcome back, {USERNAME}</p>
           <div className="topbar-end">
-            <nav className="account-links" aria-label="Account">
-              <a className={pathname === "/register" ? "active" : undefined} href="/register">
-                Register
-              </a>
-              <span aria-hidden="true">|</span>
-              <a className={pathname === "/login" ? "active" : undefined} href="/login">
-                Login
-              </a>
-            </nav>
-            <span className="avatar" aria-label={`${USERNAME} avatar placeholder`}>
-              {USERNAME.slice(0, 1)}
-            </span>
+            {account ? (
+              <>
+                <p>Welcome, {account.name}</p>
+                <nav className="account-links" aria-label="Account">
+                  <button type="button" onClick={logout}>
+                    Logout
+                  </button>
+                </nav>
+                <span className="avatar" aria-label={`${account.name} avatar placeholder`}>
+                  {account.name.slice(0, 1)}
+                </span>
+              </>
+            ) : (
+              <nav className="account-links" aria-label="Account">
+                <a className={pathname === "/register" ? "active" : undefined} href="/register">
+                  Register
+                </a>
+                <span aria-hidden="true">|</span>
+                <a className={pathname === "/login" ? "active" : undefined} href="/login">
+                  Login
+                </a>
+              </nav>
+            )}
           </div>
         </header>
         <div className="workspace-body">{children}</div>

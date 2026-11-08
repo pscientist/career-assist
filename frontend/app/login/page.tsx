@@ -36,6 +36,7 @@ export default function LoginPage() {
       }
       const body = await response.json();
       localStorage.setItem("careerassist_token", body.token);
+      window.dispatchEvent(new Event("careerassist-auth"));
       setMessage(`Logged in as ${body.username}.`);
       setPassword("");
     } catch {

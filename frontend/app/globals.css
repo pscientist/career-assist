@@ -98,7 +98,7 @@ body {
 
 .topbar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 22px 32px 0;
 }
@@ -127,6 +127,13 @@ body {
 
 .account-links a.active {
   color: #5b3cc4;
+}
+
+.account-links button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: #1d4e89;
 }
 
 .avatar {
