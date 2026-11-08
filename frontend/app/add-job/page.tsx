@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
@@ -24,22 +24,41 @@ async function errorMessage(response: Response) {
   return "Something went wrong.";
 }
 
+function authHeaders() {
+  const token = localStorage.getItem("careerassist_token");
+  if (!token) return null;
+  return { Authorization: `Bearer ${token}` };
+}
+
 export default function AddJobPage() {
   const router = useRouter();
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (!authHeaders()) setMessage("Log in to see your jobs.");
+  }, []);
+
   async function addJob(event: FormEvent) {
     event.preventDefault();
+    const headers = authHeaders();
+    if (!headers) {
+      setMessage("Log in to see your jobs.");
+      return;
+    }
     setSaving(true);
     setMessage("");
     try {
       const response = await fetch(`${API}/jobs`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+      if (response.status === 401) {
+        setMessage("Log in to see your jobs.");
+        return;
+      }
       if (!response.ok) {
         setMessage(await errorMessage(response));
         return;

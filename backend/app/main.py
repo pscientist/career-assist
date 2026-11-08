@@ -133,12 +133,20 @@ def create_interview_note(body: NoteIn, authorization: Optional[str] = Header(de
 
 
 @app.get("/jobs")
-def jobs(include_deleted: bool = False):
-    return list_jobs(include_deleted)
+def jobs(include_deleted: bool = False, authorization: Optional[str] = Header(default=None)):
+    if include_deleted:
+        return list_jobs(include_deleted=True)
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
+    return list_jobs(user_id=account["id"])
 
 
 @app.post("/jobs")
-def create_job(body: JobIn):
+def create_job(body: JobIn, authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
     try:
         return add_job(
             body.title,
@@ -148,6 +156,7 @@ def create_job(body: JobIn):
             body.seek_id,
             _parsed_stack(body.title, body.requirements),
             body.requirements,
+            user_id=account["id"],
         )
     except ValueError as error:
         raise HTTPException(400, str(error)) from error
@@ -197,16 +206,19 @@ def update_status(job_id: int, body: StatusIn):
 
 
 @app.post("/scrape")
-async def scrape():
+async def scrape(authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
     if scrape_lock.locked():
         raise HTTPException(409, "A scrape is already running.")
     async with scrape_lock:
         try:
             scraped = await scrape_seek_nz()
-            upsert_scraped(scraped)
+            upsert_scraped(scraped, account["id"])
         except Exception as error:
             raise HTTPException(500, f"Could not scrape Seek. {error}") from error
-    return list_jobs()
+    return list_jobs(user_id=account["id"])
 
 
 @app.get("/insights/ai_in_industry")

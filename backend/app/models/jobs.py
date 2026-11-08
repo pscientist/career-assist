@@ -38,13 +38,21 @@ def _job(row):
     }
 
 
-def list_jobs(include_deleted=False):
+def list_jobs(include_deleted=False, user_id=None):
     """Jobs still on the list, newest first. Pass include_deleted for market counts."""
-    sql = "SELECT * FROM jobs ORDER BY id DESC"
+    clauses = []
+    params = []
     if not include_deleted:
-        sql = "SELECT * FROM jobs WHERE status != 'deleted' ORDER BY id DESC"
+        clauses.append("status != 'deleted'")
+    if user_id is not None:
+        clauses.append("user_id = ?")
+        params.append(user_id)
+    sql = "SELECT * FROM jobs"
+    if clauses:
+        sql += " WHERE " + " AND ".join(clauses)
+    sql += " ORDER BY id DESC"
     with connect() as connection:
-        rows = connection.execute(sql).fetchall()
+        rows = connection.execute(sql, params).fetchall()
     return [_job(row) for row in rows]
 
 
@@ -54,7 +62,7 @@ def get_job(job_id):
     return _job(row) if row else None
 
 
-def add_job(title, company, location="", url="", seek_id="", tech_stack=None, requirements=""):
+def add_job(title, company, location="", url="", seek_id="", tech_stack=None, requirements="", *, user_id):
     title = (title or "").strip()
     company = (company or "").strip()
     if not title or not company:
@@ -66,9 +74,9 @@ def add_job(title, company, location="", url="", seek_id="", tech_stack=None, re
                 """
                 INSERT INTO jobs (
                     seek_id, title, company, location, url, tech_stack, requirements,
-                    status, created_at, updated_at
+                    status, created_at, updated_at, user_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?)
                 """,
                 (
                     _blank(seek_id),
@@ -80,6 +88,7 @@ def add_job(title, company, location="", url="", seek_id="", tech_stack=None, re
                     requirements or "",
                     now,
                     now,
+                    user_id,
                 ),
             )
             job_id = cursor.lastrowid
@@ -101,8 +110,8 @@ def set_status(job_id, status):
     return get_job(job_id)
 
 
-def upsert_scraped(jobs):
-    """Insert scraped ads. A Seek id that is already stored is left unchanged."""
+def upsert_scraped(jobs, user_id):
+    """Insert scraped ads for this user. A Seek id that is already stored is left unchanged."""
     now = _now()
     with connect() as connection:
         for job in jobs:
@@ -115,9 +124,9 @@ def upsert_scraped(jobs):
                 """
                 INSERT INTO jobs (
                     seek_id, title, company, location, url, tech_stack, requirements,
-                    status, created_at, updated_at
+                    status, created_at, updated_at, user_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?)
                 ON CONFLICT(seek_id) DO NOTHING
                 """,
                 (
@@ -130,6 +139,7 @@ def upsert_scraped(jobs):
                     job.get("requirements") or "",
                     now,
                     now,
+                    user_id,
                 ),
             )
 

@@ -191,9 +191,16 @@ async function errorMessage(response: Response) {
   return "Something went wrong.";
 }
 
+function authHeaders() {
+  const token = localStorage.getItem("careerassist_token");
+  if (!token) return null;
+  return { Authorization: `Bearer ${token}` };
+}
+
 export default function Page() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [message, setMessage] = useState("");
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [scraping, setScraping] = useState(false);
   const [cvJobId, setCvJobId] = useState<number | null>(null);
   const [cvLinks, setCvLinks] = useState<Record<number, string>>({});
@@ -208,11 +215,26 @@ export default function Page() {
     : jobs;
 
   async function loadJobs() {
-    const response = await fetch(`${API}/jobs`);
+    const headers = authHeaders();
+    if (!headers) {
+      setSignedIn(false);
+      setJobs([]);
+      setMessage("Log in to see your jobs.");
+      return;
+    }
+    const response = await fetch(`${API}/jobs`, { headers });
+    if (response.status === 401) {
+      setSignedIn(false);
+      setJobs([]);
+      setMessage("Log in to see your jobs.");
+      return;
+    }
     if (!response.ok) {
       setMessage(await errorMessage(response));
       return;
     }
+    setSignedIn(true);
+    setMessage("");
     setJobs(await response.json());
   }
 
@@ -221,14 +243,28 @@ export default function Page() {
   }, []);
 
   async function scrape() {
+    const headers = authHeaders();
+    if (!headers) {
+      setSignedIn(false);
+      setJobs([]);
+      setMessage("Log in to see your jobs.");
+      return;
+    }
     setScraping(true);
     setMessage("Getting the latest jobs. This takes a few minutes.");
     try {
-      const response = await fetch(`${API}/scrape`, { method: "POST" });
+      const response = await fetch(`${API}/scrape`, { method: "POST", headers });
+      if (response.status === 401) {
+        setSignedIn(false);
+        setJobs([]);
+        setMessage("Log in to see your jobs.");
+        return;
+      }
       if (!response.ok) {
         setMessage(await errorMessage(response));
         return;
       }
+      setSignedIn(true);
       setJobs(await response.json());
       setMessage("");
     } catch {
@@ -324,7 +360,7 @@ export default function Page() {
           </tr>
         </thead>
         <tbody>
-          {listed.length === 0 && (
+          {listed.length === 0 && signedIn === true && (
             <tr>
               <td colSpan={4}>No jobs yet.</td>
             </tr>
