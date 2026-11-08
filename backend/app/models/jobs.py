@@ -34,6 +34,7 @@ def _job(row):
         "requirements": row["requirements"] or "",
         "status": row["status"],
         "created_at": row["created_at"] or "",
+        "user_id": row["user_id"],
     }
 
 

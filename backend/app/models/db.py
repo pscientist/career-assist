@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS jobs (
     status TEXT NOT NULL DEFAULT 'new'
         CHECK (status IN ('new', 'applied', 'interviewing', 'deleted')),
     created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    user_id INTEGER
 )
 """
 
@@ -65,6 +66,9 @@ def connect():
     note_columns = {row[1] for row in connection.execute("PRAGMA table_info(interview_notes)")}
     if "user_id" not in note_columns:
         connection.execute("ALTER TABLE interview_notes ADD COLUMN user_id INTEGER")
+    job_columns = {row[1] for row in connection.execute("PRAGMA table_info(jobs)")}
+    if "user_id" not in job_columns:
+        connection.execute("ALTER TABLE jobs ADD COLUMN user_id INTEGER")
     try:
         yield connection
         connection.commit()
