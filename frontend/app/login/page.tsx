@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
 
@@ -15,10 +16,15 @@ async function errorMessage(response: Response) {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("careerassist_token")) router.replace("/");
+  }, [router]);
 
   async function login(event: FormEvent) {
     event.preventDefault();
@@ -37,8 +43,7 @@ export default function LoginPage() {
       const body = await response.json();
       localStorage.setItem("careerassist_token", body.token);
       window.dispatchEvent(new Event("careerassist-auth"));
-      setMessage(`Logged in as ${body.username}.`);
-      setPassword("");
+      router.replace("/");
     } catch {
       setMessage("Could not log in.");
     } finally {
