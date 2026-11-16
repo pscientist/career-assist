@@ -251,7 +251,10 @@ def ai_insight():
 
 
 @app.get("/master-cv")
-def read_master_cv():
+def read_master_cv(authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
     try:
         return master_cv_for_editor()
     except Exception as error:
@@ -259,7 +262,10 @@ def read_master_cv():
 
 
 @app.put("/master-cv/current-highlights")
-def update_current_highlights(body: HighlightsIn):
+def update_current_highlights(body: HighlightsIn, authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
     try:
         return save_current_highlights(body.highlights)
     except LookupError as error:

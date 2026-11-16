@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
 
@@ -68,6 +69,12 @@ async function errorMessage(response: Response) {
   return "Something went wrong.";
 }
 
+function authHeaders() {
+  const token = localStorage.getItem("careerassist_token");
+  if (!token) return null;
+  return { Authorization: `Bearer ${token}` };
+}
+
 function ContactValue({ value }: { value: string }) {
   if (value.startsWith("http")) {
     return <a href={value}>{value}</a>;
@@ -79,16 +86,26 @@ function ContactValue({ value }: { value: string }) {
 }
 
 export default function MasterCvPage() {
+  const router = useRouter();
   const [cv, setCv] = useState<MasterCv | null>(null);
   const [highlights, setHighlights] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    const headers = authHeaders();
+    if (!headers) {
+      router.push("/login");
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch(`${API}/master-cv`);
+        const response = await fetch(`${API}/master-cv`, { headers });
+        if (response.status === 401) {
+          if (!cancelled) router.push("/login");
+          return;
+        }
         if (!response.ok) {
           if (!cancelled) setMessage(await errorMessage(response));
           return;
@@ -105,7 +122,7 @@ export default function MasterCvPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   function updateHighlight(index: number, value: string) {
     setHighlights(highlights.map((highlight, item) => (item === index ? value : highlight)));
@@ -113,14 +130,23 @@ export default function MasterCvPage() {
 
   async function save(event: FormEvent) {
     event.preventDefault();
+    const headers = authHeaders();
+    if (!headers) {
+      router.push("/login");
+      return;
+    }
     setSaving(true);
     setMessage("");
     try {
       const response = await fetch(`${API}/master-cv/current-highlights`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify({ highlights }),
       });
+      if (response.status === 401) {
+        router.push("/login");
+        return;
+      }
       if (!response.ok) {
         setMessage(await errorMessage(response));
         return;
