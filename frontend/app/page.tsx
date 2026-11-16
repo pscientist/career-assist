@@ -209,17 +209,23 @@ export default function Page() {
   const [cvLinks, setCvLinks] = useState<Record<number, string>>({});
   const [editingId, setEditingId] = useState<number | null>(null);
   const [statusOrder, setStatusOrder] = useState<"asc" | "desc" | null>(null);
+  const [addedOrder, setAddedOrder] = useState<"asc" | "desc" | null>(null);
   const [summaries, setSummaries] = useState<Record<number, string>>({});
   const [summaryOpen, setSummaryOpen] = useState<{ id: number; place: "table" | "card" } | null>(null);
   const [summaryJobId, setSummaryJobId] = useState<number | null>(null);
   const [summaryError, setSummaryError] = useState("");
 
-  const listed = statusOrder
+  const listed = addedOrder
     ? [...jobs].sort((a, b) => {
-        const diff = (STATUS_RANK[a.status] ?? 0) - (STATUS_RANK[b.status] ?? 0);
-        return statusOrder === "asc" ? diff : -diff;
+        const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        return addedOrder === "asc" ? diff : -diff;
       })
-    : jobs;
+    : statusOrder
+      ? [...jobs].sort((a, b) => {
+          const diff = (STATUS_RANK[a.status] ?? 0) - (STATUS_RANK[b.status] ?? 0);
+          return statusOrder === "asc" ? diff : -diff;
+        })
+      : jobs;
 
   async function loadJobs() {
     const headers = authHeaders();
@@ -416,7 +422,22 @@ export default function Page() {
           <tr>
             <th>Position</th>
             <th>Company</th>
-            <th>Added</th>
+            <th>
+              <span className="status-heading">
+                Added
+                <button
+                  type="button"
+                  className="sort"
+                  aria-label="Sort by added date"
+                  onClick={() => {
+                    setStatusOrder(null);
+                    setAddedOrder((current) => (current === "asc" ? "desc" : "asc"));
+                  }}
+                >
+                  {addedOrder === "desc" ? "↓" : "↑"}
+                </button>
+              </span>
+            </th>
             <th>
               <span className="status-heading">
                 Status
@@ -424,7 +445,10 @@ export default function Page() {
                   type="button"
                   className="sort"
                   aria-label="Sort by status"
-                  onClick={() => setStatusOrder((current) => (current === "asc" ? "desc" : "asc"))}
+                  onClick={() => {
+                    setAddedOrder(null);
+                    setStatusOrder((current) => (current === "asc" ? "desc" : "asc"));
+                  }}
                 >
                   {statusOrder === "desc" ? "↓" : "↑"}
                 </button>
