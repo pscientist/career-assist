@@ -487,6 +487,10 @@ export default function Page() {
             </button>
             {cvLinks[job.id] && (
               <a href={cvLinks[job.id]} target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 3.5h6.5L19 9v11.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z" />
+                  <path d="M13.5 3.5V9H19" />
+                </svg>
                 Open CV
               </a>
             )}
