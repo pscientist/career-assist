@@ -147,7 +147,7 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="app">
       <aside className="sidebar">
-        <div className="brand">
+        <a className="brand" href="/">
           <span className="logo" aria-hidden="true">
             <Icon name="spark" />
           </span>
@@ -157,7 +157,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </div>
             <div className="brand-tag">Job Search · AI · Career Growth</div>
           </div>
-        </div>
+        </a>
         <nav className="menu">
           {MENU.map((item) => {
             const active = pathname === item.href;
