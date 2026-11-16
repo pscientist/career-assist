@@ -97,6 +97,7 @@ def render_html_cv(tailored_data, master_cv, tech_stack, output_path):
     render_context = {
         "name": master_cv["name"],
         "contact": master_cv["contact"],
+        "core_skills": master_cv.get("core_skills", []),
         "tailored_summary": tailored_data["tailored_summary"],
         "experiences": tailored_data["experiences"],
         "recommendations": master_cv.get("recommendations", []),

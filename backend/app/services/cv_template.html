@@ -62,7 +62,14 @@
     {% endif %}
   </div>
 
-  <div class="section-title">Relevant Experience</div>
+  <div class="section-title">Core Skills</div>
+  <ul class="summary">
+    {% for skill in core_skills %}
+      <li><strong>{{ skill.group | e }}:</strong> {{ skill["items"] }}</li>
+    {% endfor %}
+  </ul>
+
+  <div class="section-title">Professional Experience</div>
   {% for exp in experiences %}
     <div class="job">
       <div class="job-header">

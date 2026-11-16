@@ -29,10 +29,15 @@ type Education = {
   qualifications: string[];
 };
 
+type CoreSkill = {
+  group: string;
+  items: string;
+};
+
 type MasterCv = {
   name: string;
   contact: Record<string, string>;
-  core_skills: string[];
+  core_skills: CoreSkill[];
   experiences: Experience[];
   recommendations: Recommendation[];
   online_profiles: Profile[];
@@ -190,6 +195,16 @@ export default function MasterCvPage() {
       {cv && (
         <div className="jobs-card cv-rest">
           <section>
+            <h2>Core skills</h2>
+            <ul>
+              {cv.core_skills.map((skill) => (
+                <li key={skill.group}>
+                  <strong>{skill.group}:</strong> {skill.items}
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section>
             <h2>Earlier roles</h2>
             {earlier.map((experience) => (
               <div key={`${experience.company}-${experience.period}`}>
@@ -206,10 +221,6 @@ export default function MasterCvPage() {
                 </ul>
               </div>
             ))}
-          </section>
-          <section>
-            <h2>Core skills</h2>
-            <p>{cv.core_skills.join(", ")}</p>
           </section>
           <section>
             <h2>Recommendations</h2>

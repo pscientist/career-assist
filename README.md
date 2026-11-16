@@ -1,22 +1,24 @@
 # CareerAssist
 
-A personal app for tracking developer jobs on Seek and generating a tailored CV for one of them. The page lists the current positions. A scrape refreshes the listing. Each job can be marked New, Applied, or Interviewing, removed, or have ChatGPT generates the CV in HTML, from a "master CV" to tailor to the position.
+An app to track and analyse the **tech job market** and help developers stay on top of the trend. It provides toolkits such as CV generation, applications, interview practices, and learning resources.
 
-Job Market Insight reads the stored ads and asks the model which AI tools employers name, and what they expect someone to do with them.
+**Job Market Insight** reads the stored ads and asks the model which AI tools employers name, and what they expect someone to do with them.
 
 The browser talks only to the API. Playwright and the OpenAI calls stay behind that API, and only the API writes to the database.
 
-## CV
-
-CareerAssist — a job tracker that scrapes Seek listings, stores application status, and generates a tailored CV. Next.js frontend, FastAPI REST API, SQLite.
-
-- Split the app into a Next.js client and a FastAPI REST API so the browser only exchanges JSON; scraping, OpenAI calls, and the SQLite database stay behind the API.
-- Added account login with bearer-token sessions: the client stores the token and sends it on each request as an Authorization header, and the API checks it before returning that user’s notes.
-- Built endpoints for job tracking, Seek scraping with Playwright, CV generation, and job-market analysis, with the React pages calling those routes through fetch.
 
 ## Tech stack
 
-Python, React, JavaScript/TypeScript, OpenAI, SQL, Cursor
+- **Next.js 15 and React 19.** The pages are TypeScript. The browser talks to the API with `fetch` and sends the login token on each request as an `Authorization: Bearer` header.
+- **FastAPI.** The REST API covers jobs, Seek scraping, CV generation, market insight, and accounts. Request bodies are checked with Pydantic.
+- **Uvicorn.** It serves the API on `127.0.0.1:8765`.
+- **SQLite.** One file, `jobs.sqlite`, holds jobs, users, sessions, and interview notes. The API is the only writer.
+- **Playwright.** A headless Chromium browser scrapes one page of developer jobs from Seek New Zealand.
+- **OpenAI.** The same API key writes a tailored CV summary and a short paragraph on which AI tools the stored ads mention.
+- **Jinja2.** CV HTML is rendered from `master_cv.json` into `CV_{company}_{id}.html`.
+- **Account sessions.** Passwords are hashed with PBKDF2-SHA256. Login returns a bearer token stored in the browser.
+
+Cursor with Grok 4.7 is the editor this was built in. It is not part of the running app.
 
 ![CareerAssist dashboard](docs/dashboard.jpg)
 
