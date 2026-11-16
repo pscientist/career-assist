@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
 
@@ -90,6 +90,7 @@ function Icon({ name }: { name: string }) {
 
 export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null);
   const session = useRef(0);
 
@@ -121,11 +122,17 @@ export function Shell({ children }: { children: ReactNode }) {
     }
 
     loadAccount();
+
     window.addEventListener("careerassist-auth", loadAccount);
+
     return () => {
       active = false;
       window.removeEventListener("careerassist-auth", loadAccount);
     };
+    /*
+      Moving from the dashboard to another page runs it again: 
+      the previous listener is removed, and the account is loaded for the new page. 
+    */
   }, [pathname]);
 
   async function logout() {
@@ -133,6 +140,7 @@ export function Shell({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("careerassist_token");
     localStorage.removeItem("careerassist_token");
     setAccount(null);
+    router.replace("/insight");
     if (!token) return;
     try {
       await fetch(`${API}/logout`, {

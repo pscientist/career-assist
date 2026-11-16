@@ -122,6 +122,8 @@ export default function MasterCvPage() {
     return () => {
       cancelled = true;
     };
+    // React hooks rule is that every value the effect reads from the component 
+    // should be a dependency, so the effect does not keep calling an old router
   }, [router]);
 
   function updateHighlight(index: number, value: string) {
