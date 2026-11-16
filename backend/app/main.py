@@ -276,14 +276,18 @@ def update_current_highlights(body: HighlightsIn, authorization: Optional[str] =
         raise HTTPException(500, f"Could not save the master CV. {error}") from error
 
 
+# Generate CV button
 @app.post("/jobs/{job_id}/cv")
 def create_cv(job_id: int):
-    if get_job(job_id) is None:
+    job = get_job(job_id)
+    if job is None:
         raise HTTPException(404, "No job with that id.")
     try:
         filename = generate_cv(job_id)
     except Exception as error:
         raise HTTPException(500, f"Could not generate the CV. {error}") from error
+    if job["status"] == "new":
+        set_status(job_id, "drafted")
     return {"filename": filename}
 
 

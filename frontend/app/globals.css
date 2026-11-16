@@ -313,6 +313,11 @@ form.add-job {
   color: #1c8a45;
 }
 
+.pill-drafted {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
 .pill-applied {
   background: #e7eefc;
   color: #2451c7;

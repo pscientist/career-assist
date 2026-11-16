@@ -44,12 +44,53 @@ CREATE TABLE IF NOT EXISTS jobs (
     tech_stack TEXT,
     requirements TEXT,
     status TEXT NOT NULL DEFAULT 'new'
-        CHECK (status IN ('new', 'applied', 'interviewing', 'deleted')),
+        CHECK (status IN ('new', 'drafted', 'applied', 'interviewing', 'deleted')),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     user_id INTEGER
 )
 """
+
+
+def _allow_drafted_status(connection):
+    row = connection.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'jobs'"
+    ).fetchone()
+    if row is None or "drafted" in (row[0] or ""):
+        return
+    connection.execute(
+        """
+        CREATE TABLE jobs_next (
+            id INTEGER PRIMARY KEY,
+            seek_id TEXT UNIQUE,
+            title TEXT NOT NULL,
+            company TEXT NOT NULL,
+            location TEXT,
+            url TEXT,
+            tech_stack TEXT,
+            requirements TEXT,
+            status TEXT NOT NULL DEFAULT 'new'
+                CHECK (status IN ('new', 'drafted', 'applied', 'interviewing', 'deleted')),
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            user_id INTEGER
+        )
+        """
+    )
+    connection.execute(
+        """
+        INSERT INTO jobs_next (
+            id, seek_id, title, company, location, url, tech_stack, requirements,
+            status, created_at, updated_at, user_id
+        )
+        SELECT
+            id, seek_id, title, company, location, url, tech_stack, requirements,
+            status, created_at, updated_at, user_id
+        FROM jobs
+        """
+    )
+    connection.execute("DROP TABLE jobs")
+    connection.execute("ALTER TABLE jobs_next RENAME TO jobs")
 
 
 @contextmanager
@@ -69,6 +110,7 @@ def connect():
     job_columns = {row[1] for row in connection.execute("PRAGMA table_info(jobs)")}
     if "user_id" not in job_columns:
         connection.execute("ALTER TABLE jobs ADD COLUMN user_id INTEGER")
+    _allow_drafted_status(connection)
     try:
         yield connection
         connection.commit()

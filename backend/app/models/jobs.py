@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from app.models.db import connect
 
-STATUSES = {"new", "applied", "interviewing", "deleted"}
+STATUSES = {"new", "drafted", "applied", "interviewing", "deleted"}
 
 
 def _now():

@@ -8,11 +8,12 @@ const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765";
 
 const STATUS_OPTIONS = [
   ["new", "New"],
+  ["drafted", "Drafted"],
   ["applied", "Applied"],
   ["interviewing", "Interviewing"],
 ] as const;
 
-const STATUS_RANK: Record<string, number> = { new: 0, applied: 1, interviewing: 2 };
+const STATUS_RANK: Record<string, number> = { new: 0, drafted: 1, applied: 2, interviewing: 3 };
 
 const QUOTES = [
   ["The only way to do great work is to love what you do.", "Steve Jobs"],
@@ -312,6 +313,7 @@ export default function Page() {
       setCvLinks((current) => ({ ...current, [jobId]: href }));
       setMessage("");
       window.open(href, "_blank", "noopener,noreferrer");
+      await loadJobs();
     } catch {
       setMessage("Could not generate the CV.");
     } finally {
