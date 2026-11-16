@@ -12,6 +12,7 @@ from app.models.db import ROOT, init_db
 from app.models.jobs import add_job, get_job, list_jobs, save_requirements, set_status, update_job, upsert_scraped
 from app.models.notes import add_note, list_notes
 from app.models.users import delete_session, login_user, register_user, user_for_token
+from app.services.company import summarise_company
 from app.services.cv import generate_cv, master_cv_for_editor, save_current_highlights
 from app.services.insight import analyse_ai_skills, load_market_insight, save_market_insight
 from app.services.scrape import extract_tech_stack, scrape_seek_nz
@@ -192,6 +193,21 @@ def update_requirements(job_id: int, body: RequirementsIn):
     if job is None:
         raise HTTPException(404, "No job with that id.")
     return job
+
+
+@app.post("/jobs/{job_id}/company-summary")
+def company_summary(job_id: int, authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
+    job = get_job(job_id)
+    if job is None or (job["user_id"] is not None and job["user_id"] != account["id"]):
+        raise HTTPException(404, "No job with that id.")
+    try:
+        summary = summarise_company(job)
+    except Exception as error:
+        raise HTTPException(500, f"Could not summarise the company. {error}") from error
+    return {"summary": summary}
 
 
 @app.post("/jobs/{job_id}/status")

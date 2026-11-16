@@ -325,6 +325,36 @@ form.add-job {
   color: #5c6b7a;
 }
 
+button.company-name {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.company-name:hover {
+  text-decoration: underline;
+}
+
+button.company-name:disabled {
+  color: #5c6b7a;
+  cursor: wait;
+}
+
+.company-summary {
+  margin: 6px 0 0;
+  max-width: 42rem;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #3d4a57;
+}
+
 .empty {
   font-style: italic;
 }

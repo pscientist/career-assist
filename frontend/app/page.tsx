@@ -208,6 +208,10 @@ export default function Page() {
   const [cvLinks, setCvLinks] = useState<Record<number, string>>({});
   const [editingId, setEditingId] = useState<number | null>(null);
   const [statusOrder, setStatusOrder] = useState<"asc" | "desc" | null>(null);
+  const [summaries, setSummaries] = useState<Record<number, string>>({});
+  const [summaryOpen, setSummaryOpen] = useState<{ id: number; place: "table" | "card" } | null>(null);
+  const [summaryJobId, setSummaryJobId] = useState<number | null>(null);
+  const [summaryError, setSummaryError] = useState("");
 
   const listed = statusOrder
     ? [...jobs].sort((a, b) => {
@@ -315,12 +319,69 @@ export default function Page() {
     }
   }
 
+  async function toggleCompanySummary(jobId: number, place: "table" | "card") {
+    if (summaryJobId === jobId) return;
+    if (summaryOpen?.id === jobId && summaryOpen.place === place) {
+      setSummaryOpen(null);
+      return;
+    }
+    setSummaryOpen({ id: jobId, place });
+    setSummaryError("");
+    if (summaries[jobId]) return;
+    const headers = authHeaders();
+    if (!headers) {
+      router.push("/login");
+      return;
+    }
+    setSummaryJobId(jobId);
+    try {
+      const response = await fetch(`${API}/jobs/${jobId}/company-summary`, { method: "POST", headers });
+      if (response.status === 401) {
+        setSignedIn(false);
+        router.push("/login");
+        return;
+      }
+      if (!response.ok) {
+        setSummaryError(await errorMessage(response));
+        return;
+      }
+      const body = await response.json();
+      setSummaries((current) => ({ ...current, [jobId]: body.summary }));
+    } catch {
+      setSummaryError("Could not summarise the company.");
+    } finally {
+      setSummaryJobId(null);
+    }
+  }
+
+  function companyButton(job: Job, place: "table" | "card") {
+    const loading = summaryJobId === job.id && summaryOpen?.place === place;
+    return (
+      <button
+        type="button"
+        className="company-name"
+        onClick={() => toggleCompanySummary(job.id, place)}
+        disabled={loading}
+      >
+        {loading ? "Summarising..." : job.company}
+      </button>
+    );
+  }
+
+  function companyBlurb(job: Job, place: "table" | "card") {
+    const open = summaryOpen?.id === job.id && summaryOpen.place === place;
+    if (!open) return null;
+    const text = summaries[job.id] || summaryError;
+    if (!text) return null;
+    return <p className="company-summary">{text}</p>;
+  }
+
   const [quote, author] = quoteOfTheDay();
 
   return (
     <main>
       <header className="hero">
-        <h1>Your Job Search Companion</h1>
+        <h1>Jobs Dashboard</h1>
         <p className="lede">
           Find opportunities, tailor your applications, and keep a positive, focused mindset throughout your career
           journey.
@@ -387,7 +448,10 @@ export default function Page() {
                   </ul>
                 )}
               </td>
-              <td>{job.company}</td>
+              <td>
+                {companyButton(job, "table")}
+                {companyBlurb(job, "table")}
+              </td>
               <td className="added">{createdDate(job.created_at)}</td>
               <td>
                 <span className={`pill pill-${job.status}`}>
@@ -404,9 +468,10 @@ export default function Page() {
         <article key={job.id} id={`job-${job.id}`}>
           <h2>{job.title}</h2>
           <p className="meta">
-            {job.company}
+            {companyButton(job, "card")}
             {job.location ? ` · ${job.location}` : ""}
           </p>
+          {companyBlurb(job, "card")}
           {job.url && (
             <p>
               <a href={job.url} target="_blank" rel="noopener noreferrer">
