@@ -2,13 +2,18 @@
 
 An app to track and analyse the **tech job market** and help developers stay on top of the trend. It provides toolkits such as CV generation, applications, interview practices, and learning resources.
 
+![CareerAssist dashboard](docs/dashboard.png)
+
 **Job Market Insight** reads the stored ads and asks the model which AI tools employers name, and what they expect someone to do with them.
+
+![Job Market Insight](docs/job-market-insight.png)
 
 The browser talks only to the API. Playwright and the OpenAI calls stay behind that API, and only the API writes to the database.
 
 
 ## Tech stack
 
+- **Python 3.9.6.** The API, Seek scraping, CV generation, and database access are written in Python.
 - **Next.js 15 and React 19.** The pages are TypeScript. The browser talks to the API with `fetch` and sends the login token on each request as an `Authorization: Bearer` header.
 - **FastAPI.** The REST API covers jobs, Seek scraping, CV generation, market insight, and accounts. Request bodies are checked with Pydantic.
 - **Uvicorn.** It serves the API on `127.0.0.1:8765`.
@@ -19,8 +24,6 @@ The browser talks only to the API. Playwright and the OpenAI calls stay behind t
 - **Account sessions.** Passwords are hashed with PBKDF2-SHA256. Login returns a bearer token stored in the browser.
 
 Cursor with Grok 4.7 is the editor this was built in. It is not part of the running app.
-
-![CareerAssist dashboard](docs/dashboard.jpg)
 
 ```mermaid
 flowchart TD
