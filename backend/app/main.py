@@ -22,6 +22,7 @@ from app.models.jobs import (
 from app.models.notes import add_note, list_notes
 from app.models.users import delete_session, login_user, register_user, user_for_token
 from app.services.company import summarise_company
+from app.services.interview import interview_reply
 from app.services.cv import generate_cv, master_cv_for_editor, save_current_highlights
 from app.services.insight import analyse_ai_skills, load_market_insight, save_market_insight
 from app.services.scrape import extract_tech_stack, scrape_seek_nz
@@ -76,6 +77,15 @@ class NoteIn(BaseModel):
 
 class PrepIn(BaseModel):
     notes: str = ""
+
+
+class ChatMessage(BaseModel):
+    role: str = ""
+    content: str = ""
+
+
+class InterviewIn(BaseModel):
+    messages: list[ChatMessage] = []
 
 
 class AccountIn(BaseModel):
@@ -208,6 +218,27 @@ def update_prep(job_id: int, body: PrepIn, authorization: Optional[str] = Header
     if saved is None:
         raise HTTPException(404, "No job with that id.")
     return saved
+
+
+@app.post("/jobs/{job_id}/interview")
+def practice_interview(job_id: int, body: InterviewIn, authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
+    job = get_job(job_id)
+    if job is None or (job["user_id"] is not None and job["user_id"] != account["id"]):
+        raise HTTPException(404, "No job with that id.")
+    messages = []
+    for message in body.messages:
+        role = message.role.strip()
+        if role not in {"user", "assistant"}:
+            raise HTTPException(400, "Each message must be from the interviewer or the candidate.")
+        messages.append({"role": role, "content": message.content})
+    try:
+        reply = interview_reply(job, messages)
+    except Exception as error:
+        raise HTTPException(500, f"Could not continue the interview. {error}") from error
+    return {"reply": reply}
 
 
 @app.put("/jobs/{job_id}/requirements")

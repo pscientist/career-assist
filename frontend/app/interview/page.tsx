@@ -30,6 +30,13 @@ type Job = {
   prep_notes: string;
 };
 
+type ChatLine = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+const openingChat = (): ChatLine[] => [{ role: "assistant", content: QUESTIONS[0] }];
+
 function authHeaders() {
   const token = localStorage.getItem("careerassist_token");
   if (!token) return null;
@@ -56,6 +63,9 @@ export default function InterviewPracticePage() {
   const [notes, setNotes] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [chat, setChat] = useState<ChatLine[]>(openingChat);
+  const [answer, setAnswer] = useState("");
+  const [asking, setAsking] = useState(false);
 
   useEffect(() => {
     const headers = authHeaders();
@@ -98,6 +108,8 @@ export default function InterviewPracticePage() {
     const job = jobs.find((item) => item.id === id);
     setJobId(id);
     setNotes(job ? notesFor(job) : "");
+    setChat(openingChat());
+    setAnswer("");
     setMessage("");
   }
 
@@ -132,6 +144,57 @@ export default function InterviewPracticePage() {
       setMessage("Could not save the notes.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function sendAnswer(event: FormEvent) {
+    event.preventDefault();
+    const text = answer.trim();
+    const headers = authHeaders();
+    if (!headers || jobId === null) {
+      setMessage("Log in to prepare for an interview.");
+      return;
+    }
+    if (!text || asking) return;
+    const previous = chat;
+    const next = [...chat, { role: "user" as const, content: text }];
+    setChat(next);
+    setAnswer("");
+    setAsking(true);
+    setMessage("");
+    try {
+      const response = await fetch(`${API}/jobs/${jobId}/interview`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: next }),
+      });
+      if (response.status === 401) {
+        setChat(previous);
+        setAnswer(text);
+        setMessage("Log in to prepare for an interview.");
+        return;
+      }
+      if (!response.ok) {
+        setChat(previous);
+        setAnswer(text);
+        setMessage(await errorMessage(response));
+        return;
+      }
+      const body = await response.json();
+      const reply = typeof body.reply === "string" ? body.reply.trim() : "";
+      if (!reply) {
+        setChat(previous);
+        setAnswer(text);
+        setMessage("Could not continue the interview.");
+        return;
+      }
+      setChat([...next, { role: "assistant", content: reply }]);
+    } catch {
+      setChat(previous);
+      setAnswer(text);
+      setMessage("Could not continue the interview.");
+    } finally {
+      setAsking(false);
     }
   }
 
@@ -173,6 +236,31 @@ export default function InterviewPracticePage() {
             {saving ? "Saving..." : "Save"}
           </button>
         </form>
+      )}
+      {jobId !== null && (
+        <section className="interview-chat" aria-label="Practice interview">
+          <h2>Practice interview</h2>
+          <ol className="chat-log">
+            {chat.map((line, index) => (
+              <li key={index} className={line.role === "assistant" ? "chat-interviewer" : "chat-candidate"}>
+                <span>{line.role === "assistant" ? "Interviewer" : "You"}</span>
+                <p>{line.content}</p>
+              </li>
+            ))}
+          </ol>
+          <form onSubmit={sendAnswer}>
+            <label>
+              <span>Your answer</span>
+              <textarea
+                value={answer}
+                onChange={(event) => setAnswer(event.target.value)}
+              />
+            </label>
+            <button type="submit" disabled={asking || !answer.trim()}>
+              {asking ? "Sending..." : "Send"}
+            </button>
+          </form>
+        </section>
       )}
     </main>
   );

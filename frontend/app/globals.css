@@ -221,7 +221,8 @@ textarea {
 
 .primary,
 form.add-job button,
-form.account button {
+form.account button,
+.interview-chat button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -298,6 +299,70 @@ form.add-job {
 .question-list li {
   margin: 10px 0;
   line-height: 1.45;
+}
+
+.interview-chat {
+  margin-top: 20px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+}
+
+.interview-chat h2 {
+  margin-bottom: 12px;
+}
+
+.chat-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-log li {
+  max-width: 40rem;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.chat-log span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5c6b7a;
+}
+
+.chat-log p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.chat-interviewer {
+  background: #f3e8ff;
+}
+
+.chat-candidate {
+  align-self: flex-end;
+  background: #e7eefc;
+}
+
+.interview-chat form label {
+  display: block;
+  margin: 12px 0;
+}
+
+.interview-chat form span {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.interview-chat textarea {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .pill {
