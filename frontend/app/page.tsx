@@ -388,7 +388,7 @@ export default function Page() {
 
   return (
     <main>
-      <header className="hero">
+      <header className="hero" id="top">
         <h1>Jobs Dashboard</h1>
         <p className="lede">
           Find opportunities, tailor your applications, and keep a positive, focused mindset throughout your career
@@ -555,6 +555,9 @@ export default function Page() {
           ) : (
             job.requirements.trim() && <Requirements text={job.requirements} terms={job.tech_stack} />
           )}
+          <p className="to-top">
+            <a href="#top">Top</a>
+          </p>
         </article>
       ))}
     </main>

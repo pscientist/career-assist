@@ -372,6 +372,10 @@ button.company-name:disabled {
   font-weight: 600;
 }
 
+.to-top {
+  margin: 16px 0 0;
+}
+
 form.add-job,
 article {
   margin-top: 20px;
