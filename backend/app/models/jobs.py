@@ -35,6 +35,7 @@ def _job(row):
         "status": row["status"],
         "created_at": row["created_at"] or "",
         "user_id": row["user_id"],
+        "prep_notes": row["prep_notes"] or "",
     }
 
 
@@ -174,6 +175,17 @@ def update_job(job_id, title, company, location="", url="", seek_id="", tech_sta
                 return None
     except sqlite3.IntegrityError as error:
         raise ValueError("That Seek id is already stored.") from error
+    return get_job(job_id)
+
+
+def save_prep_notes(job_id, notes):
+    with connect() as connection:
+        cursor = connection.execute(
+            "UPDATE jobs SET prep_notes = ?, updated_at = ? WHERE id = ?",
+            (notes or "", _now(), job_id),
+        )
+        if cursor.rowcount == 0:
+            return None
     return get_job(job_id)
 
 

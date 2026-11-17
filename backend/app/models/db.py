@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS jobs (
         CHECK (status IN ('new', 'drafted', 'applied', 'interviewing', 'deleted')),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
-    user_id INTEGER
+    user_id INTEGER,
+    prep_notes TEXT
 )
 """
 
@@ -73,7 +74,8 @@ def _allow_drafted_status(connection):
                 CHECK (status IN ('new', 'drafted', 'applied', 'interviewing', 'deleted')),
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
-            user_id INTEGER
+            user_id INTEGER,
+            prep_notes TEXT
         )
         """
     )
@@ -111,6 +113,9 @@ def connect():
     if "user_id" not in job_columns:
         connection.execute("ALTER TABLE jobs ADD COLUMN user_id INTEGER")
     _allow_drafted_status(connection)
+    job_columns = {row[1] for row in connection.execute("PRAGMA table_info(jobs)")}
+    if "prep_notes" not in job_columns:
+        connection.execute("ALTER TABLE jobs ADD COLUMN prep_notes TEXT")
     try:
         yield connection
         connection.commit()

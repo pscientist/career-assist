@@ -9,7 +9,16 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.models.db import ROOT, init_db
-from app.models.jobs import add_job, get_job, list_jobs, save_requirements, set_status, update_job, upsert_scraped
+from app.models.jobs import (
+    add_job,
+    get_job,
+    list_jobs,
+    save_prep_notes,
+    save_requirements,
+    set_status,
+    update_job,
+    upsert_scraped,
+)
 from app.models.notes import add_note, list_notes
 from app.models.users import delete_session, login_user, register_user, user_for_token
 from app.services.company import summarise_company
@@ -63,6 +72,10 @@ class RequirementsIn(BaseModel):
 
 class NoteIn(BaseModel):
     note: str = ""
+
+
+class PrepIn(BaseModel):
+    notes: str = ""
 
 
 class AccountIn(BaseModel):
@@ -181,6 +194,20 @@ def edit_job(job_id: int, body: JobIn):
     if job is None:
         raise HTTPException(404, "No job with that id.")
     return job
+
+
+@app.put("/jobs/{job_id}/prep")
+def update_prep(job_id: int, body: PrepIn, authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
+    job = get_job(job_id)
+    if job is None or (job["user_id"] is not None and job["user_id"] != account["id"]):
+        raise HTTPException(404, "No job with that id.")
+    saved = save_prep_notes(job_id, body.notes)
+    if saved is None:
+        raise HTTPException(404, "No job with that id.")
+    return saved
 
 
 @app.put("/jobs/{job_id}/requirements")
