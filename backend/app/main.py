@@ -58,7 +58,8 @@ class JobIn(BaseModel):
     tech_stack: str = ""
     requirements: str = ""
 
-# FastAPI matches JSON keys in the request to the fields declared on the class.
+# FastAPI matches JSON keys in the request to the 
+#   fields declared on the class.
 class StatusIn(BaseModel):
     status: str
 
