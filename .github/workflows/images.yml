@@ -36,28 +36,46 @@ jobs:
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main' && secrets.GCP_WORKLOAD_IDENTITY_PROVIDER != ''
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
+      - name: Deploy only when Cloud Run is configured
+        id: gate
+        env:
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        run: |
+          if [ -n "$GCP_WORKLOAD_IDENTITY_PROVIDER" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Cloud Run deploy is skipped until the GitHub secrets are set."
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.deploy == 'true'
 
       - uses: google-github-actions/auth@v2
+        if: steps.gate.outputs.deploy == 'true'
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - uses: google-github-actions/setup-gcloud@v2
+        if: steps.gate.outputs.deploy == 'true'
 
       - name: Point gcloud at the project
+        if: steps.gate.outputs.deploy == 'true'
         run: gcloud config set project "${{ secrets.GCP_PROJECT_ID }}"
 
       - name: Sign in to Artifact Registry
+        if: steps.gate.outputs.deploy == 'true'
         run: gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
 
       - name: Publish and deploy the API
+        if: steps.gate.outputs.deploy == 'true'
         id: api
         run: |
           set -euo pipefail
@@ -83,6 +101,7 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Publish and deploy the frontend
+        if: steps.gate.outputs.deploy == 'true'
         id: web
         run: |
           set -euo pipefail
@@ -105,6 +124,7 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Allow the frontend origin on the API
+        if: steps.gate.outputs.deploy == 'true'
         run: |
           gcloud run services update "$API_SERVICE" \
             --region "$REGION" \
