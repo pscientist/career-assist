@@ -15,6 +15,16 @@ CREATE TABLE IF NOT EXISTS interview_notes (
 )
 """
 
+_ACHIEVEMENTS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS achievements (
+    id INTEGER PRIMARY KEY,
+    achievement TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+)
+"""
+
 _USERS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
@@ -99,10 +109,12 @@ def _allow_drafted_status(connection):
 def connect():
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
     connection.execute(_SCHEMA)
     connection.execute(_NOTES_SCHEMA)
     connection.execute(_USERS_SCHEMA)
     connection.execute(_SESSIONS_SCHEMA)
+    connection.execute(_ACHIEVEMENTS_SCHEMA)
     user_columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
     if "name" not in user_columns:
         connection.execute("ALTER TABLE users ADD COLUMN name TEXT NOT NULL DEFAULT ''")

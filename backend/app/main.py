@@ -19,6 +19,7 @@ from app.models.jobs import (
     update_job,
     upsert_scraped,
 )
+from app.models.achievements import add_achievement, list_achievements
 from app.models.notes import add_note, list_notes
 from app.models.users import delete_session, login_user, register_user, user_for_token
 from app.services.company import summarise_company
@@ -74,6 +75,10 @@ class RequirementsIn(BaseModel):
 
 class NoteIn(BaseModel):
     note: str = ""
+
+
+class AchievementIn(BaseModel):
+    achievement: str = ""
 
 
 class PrepIn(BaseModel):
@@ -153,6 +158,25 @@ def create_interview_note(body: NoteIn, authorization: Optional[str] = Header(de
         raise HTTPException(401, "Log in first.")
     try:
         return add_note(body.note, account["id"])
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from error
+
+
+@app.get("/achievements")
+def achievements(authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
+    return list_achievements(account["id"])
+
+
+@app.post("/achievements")
+def create_achievement(body: AchievementIn, authorization: Optional[str] = Header(default=None)):
+    account = user_for_token(_bearer(authorization))
+    if account is None:
+        raise HTTPException(401, "Log in first.")
+    try:
+        return add_achievement(body.achievement, account["id"])
     except ValueError as error:
         raise HTTPException(400, str(error)) from error
 
