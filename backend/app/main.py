@@ -1,4 +1,5 @@
 import asyncio
+import os
 import re
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -33,6 +34,16 @@ HOST = "127.0.0.1"
 PORT = 8765
 CV_NAME = re.compile(r"^CV_[\w.-]+\.html$")
 scrape_lock = asyncio.Lock()
+_LOCAL_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+
+def _cors_origins():
+    origins = list(_LOCAL_ORIGINS)
+    for origin in os.environ.get("CORS_ORIGINS", "").split(","):
+        value = origin.strip().rstrip("/")
+        if value and value not in origins:
+            origins.append(value)
+    return origins
 
 
 @asynccontextmanager
@@ -44,7 +55,7 @@ async def lifespan(app):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=_cors_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -111,6 +122,11 @@ def _bearer(authorization):
 
 def _parsed_stack(title, requirements):
     return extract_tech_stack(f"{title}\n{requirements}")
+
+
+@app.get("/health")
+def health():
+    return {"ok": True}
 
 
 @app.post("/register")
@@ -387,4 +403,8 @@ def download_cv(filename: str):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host=HOST, port=PORT)
+    uvicorn.run(
+        app,
+        host=os.environ.get("HOST", HOST),
+        port=int(os.environ.get("PORT", PORT)),
+    )

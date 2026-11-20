@@ -128,16 +128,31 @@ async def load_job_cards(list_page, url):
     return await list_page.query_selector_all(card_selector)
 
 
+def _prepare_browser():
+    # A sandbox browser cache can hide the Chromium Playwright already installed.
+    # The Playwright image sets the same variable to the browsers it ships, so keep a path that contains Chromium.
+    browsers = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    if browsers:
+        try:
+            names = os.listdir(browsers)
+        except OSError:
+            names = []
+        if not any(name.startswith("chromium") for name in names):
+            os.environ.pop("PLAYWRIGHT_BROWSERS_PATH", None)
+    if os.path.exists("/.dockerenv") or os.environ.get("K_SERVICE"):
+        return ["--no-sandbox", "--disable-dev-shm-usage"]
+    return []
+
+
 async def scrape_seek_nz(search_term="developer", location="All New Zealand", pages_to_scrape=1):
     """Scrape Seek and return job dicts. The caller stores them."""
-    # A sandbox browser cache can hide the Chromium Playwright already installed.
-    os.environ.pop("PLAYWRIGHT_BROWSERS_PATH", None)
+    launch_args = _prepare_browser()
     jobs_data = []
     page_error = None
     base_url = build_search_url(search_term, location)
 
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=True)
+        browser = await playwright.chromium.launch(headless=True, args=launch_args)
         context = await browser.new_context(
             user_agent=(
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "

@@ -1,0 +1,14 @@
+FROM mcr.microsoft.com/playwright/python:v1.65.2-noble
+
+USER root
+WORKDIR /app
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt "playwright==1.65.2" \
+    && python -m playwright install chromium
+COPY backend /app/backend
+COPY docker/start-api.sh /app/start-api.sh
+RUN chmod 755 /app/start-api.sh
+WORKDIR /app/backend
+ENV PORT=8765
+EXPOSE 8765
+CMD ["/app/start-api.sh"]

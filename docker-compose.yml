@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8765:8765"
+    environment:
+      PORT: "8765"
+    volumes:
+      - ./jobs.sqlite:/app/jobs.sqlite
+      - ./.env:/app/.env:ro
+      - ./master_cv.json:/app/master_cv.json
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: http://127.0.0.1:8765
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+    depends_on:
+      - api
