@@ -93,7 +93,9 @@ Then start both containers:
 docker compose up --build
 ```
 
-Open http://localhost:3000. The API is published on http://127.0.0.1:8765. Compose builds the same two images if they are missing, and it mounts `jobs.sqlite`, `.env`, and `master_cv.json` into the API container. Those files stay on your machine and are not copied into the image.
+Open http://localhost:3000. The API is published on http://127.0.0.1:8765. Compose builds the same two images if they are missing, and it mounts `jobs.sqlite`, `.env`, and `master_cv.json` into the API container.
+
+You create `.env` and `master_cv.json` yourself. They stay in the repository root. `.env` holds `OPENAI_API_KEY`. `master_cv.json` is the master CV. Compose attaches both files when the API container starts. The image build leaves them out, and Git does not store them. On another machine, or in a deployment, you add those two files again by hand. The app writes each tailored CV as `CV_{company}_{id}.html` on that same machine.
 
 Stop the local uvicorn and `npm run dev` processes first if they are already using ports 8765 and 3000.
 
